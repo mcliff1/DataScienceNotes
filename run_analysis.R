@@ -1,5 +1,6 @@
-# working notes for the Week 4 project on Getting and Cleaning data
-# started 11/21/2017
+# Final Project Submission for the Week 4 project on Getting and Cleaning data
+# Date: 11/21/2017
+# Author: Matt Cliff
 # https://www.coursera.org/learn/data-cleaning/peer/FIZtT/getting-and-cleaning-data-course-project
 
 require(dplyr)
