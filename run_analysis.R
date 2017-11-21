@@ -69,7 +69,7 @@ colNames <- sub("std", "Std", colNames)
 names(combo) <- colNames
 
 # go ahead and save it
-write.table(combo, file="./data/quiz4-tidy.txt", quote=FALSE)
+write.table(combo, file="./tidy.txt", quote=FALSE)
 
 
 # 5 - get the mean by Activity, SubjectId for the tidy data
@@ -79,4 +79,4 @@ write.table(combo, file="./data/quiz4-tidy.txt", quote=FALSE)
 
 comboMean <- combo %>% group_by(Activity, SubjectId) %>% summarize_all(.funs = c(mean="mean"))
 
-write.table(comboMean, file="./data/quiz4-tidymean.txt", quote=FALSE)
+write.table(comboMean, file="./tidy-summary.txt", quote=FALSE)

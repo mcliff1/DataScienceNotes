@@ -7,8 +7,8 @@ Submission of Peer-graded assignment for: Getting and Cleaning data
 
 
 ### References
-[UCI Dataset from Coursera]("https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip") Data from Coursera Site
-[Human Activity Recognition Using SmartPhones](http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones) Description of data from UCI data repository
+* [UCI Dataset from Coursera](https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip) Data from Coursera Site
+* [Human Activity Recognition Using SmartPhones](http://archive.ics.uci.edu/ml/datasets/Human+Activity+Recognition+Using+Smartphones) Description of data from UCI data repository
 
 ## Repository Contents
  * [CodeBook.md](CodeBook.md) describes the variables, data, and transformations
