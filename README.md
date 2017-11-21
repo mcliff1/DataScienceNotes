@@ -4,6 +4,8 @@ Submission of Peer-graded assignment for: Getting and Cleaning data
 ## Overview of Analysis
 
   This repository contains scripts and codebooks to produce tidy data sets from the UCI Human Activity dataset to help identify the human activity, such as Walking, Running, etc based on the sensor data (acceleration and rotation in 3 dimensions) of the users phones.
+  
+  Code Book outlines process to convert data from source to tidy data sets
 
 
 ### References
@@ -15,9 +17,7 @@ Submission of Peer-graded assignment for: Getting and Cleaning data
  * [README.md](README.md) overview of file contents and explanation of analysis
  * [run_analysis.md](run_analysis.md) code to create the tidy data sets
 
-#TODO
-* code book that modified and updats available codebooks with the data (indicateds variables, summaries calculated, along with units and any other relevant information.
-* readme file that is clean and understand and explains the analyiss of the files
+
 
 
 
