@@ -80,4 +80,4 @@ write.table(combo, file="./tidy.txt", quote=FALSE)
 
 comboMean <- combo %>% group_by(Activity, SubjectId) %>% summarize_all(.funs = c(mean="mean"))
 
-write.table(comboMean, file="./tidy-summary.txt", quote=FALSE)
+write.table(comboMean, file="./tidy-summary.txt", quote=FALSE, row.name=FALSE)
