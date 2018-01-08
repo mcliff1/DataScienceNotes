@@ -1,3 +1,9 @@
+# TODO - change this to a online source to keep track of papers and documents
+## Data Analysis
+Notes on how to do a general data analysis
+## Residuals Study
+Pull out the primary linaer driver and look at the second
+
 # Getting and Cleaning Data  - Course Project
 Submission of Peer-graded assignment for: Getting and Cleaning data
 
