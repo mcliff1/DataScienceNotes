@@ -1,0 +1,58 @@
+---
+title: "BasicLinearRegression"
+author: "Matt Cliff"
+date: "January 28, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Linear Regression
+
+Why do we use the square of delta's when estimating linear regression?
+
+The answer is related to the construction of how the to optimizae a formula including many data points.
+
+Start with the fact
+$$
+\alpha \ni \min_{\alpha} \sum_{i=1}^n \left( y_i - \alpha \right)^2 = \frac{\sum y_i}{n}
+$$
+
+This is proven by taking the derivate with respect to $\alpha$ of the left hand side
+$$
+\frac{d}{d\alpha} \sum_{i=1}^n (y_i - \alpha)^2 =
+\sum_{i=1}^n 2 * (y_i - \alpha) (-1) = 0
+$$
+$$
+\sum_{i=1}^n y_i = \alpha  n
+$$
+We also have
+$$
+\alpha \ni \min_{\alpha} \sum_{i=1}^n (y_i - \alpha x_i)^2 = \frac{\sum y_i}{\sum x_i}
+$$
+
+
+$$
+\frac{d}{d\alpha} \sum_{i=1}^n (y_i - \alpha x_i)^2 =
+\sum_{i=1}^n 2 * (y_i - x_i \alpha) (-1) = 0
+$$
+
+$$
+\sum_{i=1}^n y_i = \alpha \sum_{x=1}^n   x_i
+$$
+
+since we're just laying out formula  to get Degrees of freedome we have this for 2 populations with different variances  TODO = look this up from Wek 1 of Regression models
+$$
+df = \frac{ \left( {S_x}^2/n_x + {S_y}^2/n_y \right)^2 }{ \left( {S_x}^2 / n_x \right)^2} \dots
+$$
+
+
+The general rule for rejection of a hypothesis test is to fail whenever the probability that the sample we have seen is consistent with the hypothesis (p value) is low.
+$$
+\frac{\bar{X} - \mu}{s/\sqrt{n}} > Z_{1-\alpha}
+$$
+
+
+
