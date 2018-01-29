@@ -1,4 +1,8 @@
 # TODO - change this to a online source to keep track of papers and documents
+
+on Jan 28, I connected a RStudio project to this repository locally
+
+
 ## Data Analysis
 Notes on how to do a general data analysis
 ## Residuals Study
