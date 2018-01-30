@@ -128,10 +128,23 @@ $(document).ready(function () {
 <h2>Basic Model Analysis</h2>
 <p>My goal is to set up a page that I can inject a dataset into then run numerous models to exhaustion to identify to best one or ones to tune.</p>
 <p>To begin with I will need to limit the problem domain based on regression or classification methods, although the underlying mechanics is almost always linear algebra the approaches to these problems can diverge significantly.</p>
-<div id="classifiction-problem" class="section level3">
-<h3>Classifiction Problem</h3>
+<div id="classification-problem" class="section level3">
+<h3>Classification Problem</h3>
 <p>The Classification (value) problem is defined as one where a particular observation of <span class="math inline">\(n\)</span> predictors will have a single valued dependent (predicted) variable that is from a finite class. The predictor or indepdenent variables can be either finite valued or real valued (or vector valued).</p>
 <p>Our goal is to come up with some model function <span class="math inline">\(f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}\)</span> that matches our data and we think can best be used to predict the dependent variable for future observations from the domain space.</p>
+<p>Each of the <span class="math inline">\(\mathbb{X_j}\)</span> could be discrete or continuous, we will not have any practicle restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.</p>
+<p>We want to find something with at least 10 features, and 5000 observations [<a href="https://archive.ics.uci.edu/ml/datasets.html?format" class="uri">https://archive.ics.uci.edu/ml/datasets.html?format</a>=&amp;task=cla&amp;att=&amp;area=&amp;numAtt=10to100&amp;numIns=&amp;type=&amp;sort=instDown&amp;view=table]</p>
+<ul>
+<li><p><a href="Buzz%20in%20Social%20Media">https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+</a></p></li>
+<li><p><a href="Sensorless%20drive">https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis</a> - 49 attributs, 11 classes, 58000 records</p></li>
+<li><p><a href="card%20payment">https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients</a> binary classifier with 23 predictors</p></li>
+</ul>
+<pre class="r"><code>training &lt;- data.frame(a=c(1,2,3),b=c(1,2,3))</code></pre>
+<p>The basic approach will be to ensure no zero elements NAndx &lt;- sapply(data, function(x) mean(is.na(x))) &gt; .9 nzv &lt;- nearZeroVar(data)</p>
+<pre class="r"><code>ccDataURL &lt;- &quot;https://archive.ics.uci.edu/ml/machine-learning-databases/00350/default%20of%20credit%20card%20clients.xls&quot;
+ccDataFile &lt;- &quot;ccDataFile.xls&quot;
+
+download.file(url=ccDataURL, destfile=ccDataFile)</code></pre>
 </div>
 </div>
 <div id="including-plots" class="section level2">

@@ -1,5 +1,5 @@
 ---
-title: "BasicModelAnalysis"
+title: "BasicDataAnalysis"
 author: "Matt Cliff"
 date: "January 29, 2018"
 output: html_document
@@ -7,22 +7,13 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+require(tidyverse)
 ```
 
-## Basic Model Analysis
+## Basic Data Analysis
 
-My goal is to set up a page that I can inject a dataset into
-then run numerous models to exhaustion to identify to best one or ones to tune.
+This report focused on reading several data sets, performing exploratory data analysis and saving a tidy data set to use for modeling.
 
-To begin with I will need to limit the problem domain based on regression or classification methods, although the underlying mechanics is almost always linear algebra the approaches to these problems can diverge significantly.
-
-### Classification Problem
-
-The Classification (value) problem is defined as one where a particular observation of $n$ predictors will have a single valued dependent (predicted) variable that is from a finite class.  The predictor or indepdenent variables can be either finite valued or real valued (or vector valued).
-
-Our goal is to come up with some model function $f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}$ that matches our data and we think can best be used to predict the dependent variable for future observations from the domain space.
-
-Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practicle restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.
 
 We want to find something with at least 10 features, and 5000 observations
 [https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table]
@@ -48,10 +39,10 @@ ccDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00350/de
 ccDataFile <- "ccDataFile.xls"
 
 download.file(url=ccDataURL, destfile=ccDataFile)
-
+ccData <- readxl
 ```
 
-## Data Summary
+## Including Plots
 
 You can also embed plots, for example:
 
