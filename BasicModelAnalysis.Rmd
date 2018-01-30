@@ -29,6 +29,14 @@ We want to find something with at least 10 features, and 5000 observations
 
 * [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
 
+* [https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis](Sensorless drive) - 49 attributs, 11 classes, 58000 records
+
+* [https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients](card payment) binary classifier with 23 predictors
+
+```{r loaddata}
+training <- data.frame(a=c(1,2,3),b=c(1,2,3))
+
+
 
 
 ## Including Plots
