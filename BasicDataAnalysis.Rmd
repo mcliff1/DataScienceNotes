@@ -6,8 +6,9 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
 require(tidyverse)
+require(xlsx)
 ```
 
 ## Basic Data Analysis
@@ -24,8 +25,17 @@ We want to find something with at least 10 features, and 5000 observations
 
 * [https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients](card payment) binary classifier with 23 predictors
 
-```{r loaddata}
+```{r loaddata, echo=FALSE}
 training <- data.frame(a=c(1,2,3),b=c(1,2,3))
+
+
+ccDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00350/default%20of%20credit%20card%20clients.xls"
+ccDataFile <- "./data/ccDataFile.xls"
+dir.create("data", showWarnings=FALSE)
+if (!file.exists(ccDataFile)) {
+    download.file(url=ccDataURL, destfile=ccDataFile, mode="wb")
+}
+ccData <- read.xlsx2(file=ccDataFile, sheetIndex=1, startRow=2, stringsAsFactors=FALSE)
 
 
 ```
@@ -34,17 +44,24 @@ The basic approach will be to ensure no zero elements
 NAndx <- sapply(data, function(x) mean(is.na(x))) > .9
 nzv <- nearZeroVar(data)
 
-```{r pulldata}
-ccDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00350/default%20of%20credit%20card%20clients.xls"
-ccDataFile <- "ccDataFile.xls"
+```{r pulldata, echo=FALSE, warning=FALSE}
 
-download.file(url=ccDataURL, destfile=ccDataFile)
-ccData <- readxl
+fCols <- c("SEX", "EDUCATION", "MARRIAGE", "default.payment.next.month")
+nCols <- c("LIMIT_BAL", "AGE", "PAY_0", "PAY_2", "PAY_3", "PAY_4", "PAY_5", "PAY_6",
+           "BILL_AMT1", "BILL_AMT2", "BILL_AMT3", "BILL_AMT4", "BILL_AMT5", "BILL_AMT6", 
+           "PAY_AMT1", "PAY_AMT2", "PAY_AMT3", "PAY_AMT4", "PAY_AMT5", "PAY_AMT6" )
+ccData <- mutate_at(ccData, fCols, funs(factor(.))) %>%
+    mutate_at(nCols, funs(as.numeric(.)))
+summary(ccData)
 ```
 
-## Including Plots
+## Plots
 
-You can also embed plots, for example:
-
+Lets look at the table of SEX, Marriage, education to the *default.payment.next.month* indicator.
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r writeData}
+save(ccData, file="ccData.RData")
+
+```

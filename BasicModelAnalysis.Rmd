@@ -44,10 +44,7 @@ NAndx <- sapply(data, function(x) mean(is.na(x))) > .9
 nzv <- nearZeroVar(data)
 
 ```{r pulldata}
-ccDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00350/default%20of%20credit%20card%20clients.xls"
-ccDataFile <- "ccDataFile.xls"
 
-download.file(url=ccDataURL, destfile=ccDataFile)
 
 ```
 
