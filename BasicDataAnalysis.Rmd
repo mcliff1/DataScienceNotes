@@ -24,7 +24,10 @@ We want to find something with at least 10 features, and 5000 observations
 
 * [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
 
-* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records
+* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records 
+* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
+* [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
+
 
 ### Credit Payment Dataset
 This comes from [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
@@ -72,9 +75,6 @@ hist(ccData$AGE)
 hist(ccData$PAY_0)
 ```
 
-
-## Plots
-
 Here we can see that if the bill amounts are much higher, more likely to default
 ```{r plot}
 #ggplot(ccData, aes(PAY_AMT1, fill=MARRIAGE)) +
@@ -89,9 +89,80 @@ Lets look at the table of SEX, Marriage, education to the *default.payment.next.
 
 
 
+### Parkinsons
+
+This dataset is composed of a range of biomedical voice measurements from 
+31 people, 23 with Parkinson's disease (PD). Each column in the table is a 
+particular voice measure, and each row corresponds one of 195 voice 
+recording from these individuals ("name" column). The main aim of the data 
+is to discriminate healthy people from those with PD, according to "status" 
+column which is set to 0 for healthy and 1 for PD.
+
+ There are around six 
+recordings per patient, the name of the patient is identified in the first 
+column.
+
+
+(https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
+
+
+Matrix column entries (attributes):
+name - ASCII subject name and recording number
+MDVP:Fo(Hz) - Average vocal fundamental frequency
+MDVP:Fhi(Hz) - Maximum vocal fundamental frequency
+MDVP:Flo(Hz) - Minimum vocal fundamental frequency
+MDVP:Jitter(%),MDVP:Jitter(Abs),MDVP:RAP,MDVP:PPQ,Jitter:DDP - Several 
+measures of variation in fundamental frequency
+MDVP:Shimmer,MDVP:Shimmer(dB),Shimmer:APQ3,Shimmer:APQ5,MDVP:APQ,Shimmer:DDA - Several measures of variation in amplitude
+NHR,HNR - Two measures of ratio of noise to tonal components in the voice
+status - Health status of the subject (one) - Parkinson's, (zero) - healthy
+RPDE,D2 - Two nonlinear dynamical complexity measures
+DFA - Signal fractal scaling exponent
+spread1,spread2,PPE - Three nonlinear measures of fundamental frequency variation 
+
+status - Health status of the subject (one) - Parkinson's, (zero) - healthy
+```{r loadPKdata, echo=FALSE}
+
+pkDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data"
+pkDataFile <- "./data/parkinsons.data"
+dir.create("data", showWarnings=FALSE)
+if (!file.exists(pkDataFile)) {
+    download.file(url=pkDataURL, destfile=pkDataFile)
+}
+pkData <- read.csv(file = pkDataFile)
+pkData <- select(pkData, -(name)) %>%
+    mutate(status = factor(status))
+summary(pkData)
+```
+
+Let's take a look at some plots
+```{r plotPK}
+qplot(MDVP.Fo.Hz., fill=status, alpha=I(.5), data=pkData)
+qplot(MDVP.Jitter.Abs., fill=status, alpha=I(.5), geom="density", data=pkData)
+
+qplot(Jitter.DDP, fill=status, alpha=I(.5), geom="density", data=pkData)
+
+qplot(MDVP.Shimmer, fill=status, alpha=I(.5), geom="density", data=pkData)
+
+```
+
+#### References
+
+Max A. Little, Patrick E. McSharry, Eric J. Hunter, Lorraine O. Ramig (2008), 
+'Suitability of dysphonia measurements for telemonitoring of Parkinson's disease', 
+IEEE Transactions on Biomedical Engineering (to appear).
+
+'Exploiting Nonlinear Recurrence and Fractal Scaling Properties for Voice Disorder Detection', 
+Little MA, McSharry PE, Roberts SJ, Costello DAE, Moroz IM. 
+BioMedical Engineering OnLine 2007, 6:23 (26 June 2007)
+
+
+
+
 ## Save Formatted Data
 Finally Save the datasets
 ```{r writeData}
-save(ccData, file="ccData.RData")
+save(ccData, file="./data/ccData.RData")
+save(pkData, file="./data/pkData.RData")
 
 ```

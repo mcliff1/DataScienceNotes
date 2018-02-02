@@ -29,13 +29,15 @@ We want to find something with at least 10 features, and 5000 observations
 
 * [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
 
-* [https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis](Sensorless drive) - 49 attributs, 11 classes, 58000 records
+* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records
 
-* [https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients](card payment) binary classifier with 23 predictors
+* [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
+
+* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
 
 ```{r loaddata}
-training <- data.frame(a=c(1,2,3),b=c(1,2,3))
-
+#load("data/ccData.RData")
+data("possum", package="DAAG")
 
 ```
 
@@ -54,3 +56,15 @@ You can also embed plots, for example:
 
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Q what correlates most to Sex?
+
+## Plots
+
+```{r plot}
+#require(ggplot2)
+#qplot(possum, x=eye, y=totlngth, col=sex, size=log(age))
+
+```
+
+

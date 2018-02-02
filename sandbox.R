@@ -58,3 +58,27 @@ filter (ccData, LIMIT_BAL > 500000) %>%
 ?qplot
 ?xyplot
 qplot(PAY_AMT1,BILL_AMT1,data=ccData, col=default.payment.next.month)
+
+
+
+
+
+
+
+
+
+
+##########################################
+## (2/2/18)
+##  Work on PK stuff
+pkDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data"
+pkDataFile <- "./data/parkinsons.data"
+dir.create("data", showWarnings=FALSE)
+if (!file.exists(pkDataFile)) {
+    download.file(url=pkDataURL, destfile=pkDataFile)
+}
+pkData <- read.csv(file = pkDataFile)
+
+
+fit <- train(status ~ ., data=pkData)
+require(caret)

@@ -137,20 +137,23 @@ $(document).ready(function () {
 <ul>
 <li><p><a href="Buzz%20in%20Social%20Media">https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+</a></p></li>
 <li><p><a href="Sensorless%20drive">https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis</a> - 49 attributs, 11 classes, 58000 records</p></li>
-<li><p><a href="card%20payment">https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients</a> binary classifier with 23 predictors</p></li>
+<li><p><a href="https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients">card payment</a> binary classifier with 23 predictors</p></li>
 </ul>
-<pre class="r"><code>training &lt;- data.frame(a=c(1,2,3),b=c(1,2,3))</code></pre>
+<pre class="r"><code>#load(&quot;data/ccData.RData&quot;)
+data(&quot;possum&quot;, package=&quot;DAAG&quot;)</code></pre>
 <p>The basic approach will be to ensure no zero elements NAndx &lt;- sapply(data, function(x) mean(is.na(x))) &gt; .9 nzv &lt;- nearZeroVar(data)</p>
-<pre class="r"><code>ccDataURL &lt;- &quot;https://archive.ics.uci.edu/ml/machine-learning-databases/00350/default%20of%20credit%20card%20clients.xls&quot;
-ccDataFile &lt;- &quot;ccDataFile.xls&quot;
-
-download.file(url=ccDataURL, destfile=ccDataFile)</code></pre>
 </div>
 </div>
-<div id="including-plots" class="section level2">
-<h2>Including Plots</h2>
+<div id="data-summary" class="section level2">
+<h2>Data Summary</h2>
 <p>You can also embed plots, for example:</p>
 <p>Note that the <code>echo = FALSE</code> parameter was added to the code chunk to prevent printing of the R code that generated the plot.</p>
+<p>Q what correlates most to Sex?</p>
+</div>
+<div id="plots" class="section level2">
+<h2>Plots</h2>
+<pre class="r"><code>#require(ggplot2)
+#qplot(possum, x=eye, y=totlngth, col=sex, size=log(age))</code></pre>
 </div>
 
 
