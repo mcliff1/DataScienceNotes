@@ -33,3 +33,28 @@ d6 <- ccData %>%
 summary(factor(d6$PAY_0))
 summary(d6$PAY_0)
 table(d6$PAY_0, d6$PAY_2)
+
+
+
+rm(ccData)
+load(file="data/ccData.Rdata")
+
+require(caret)
+# takes a long time
+fit <- train(default.payment.next.month ~ ., data=ccData)
+
+
+# using Lasso
+mod_lasso <- train(default.payment.next.month ~ ., data=ccData, method="lasso")
+library(elasticnet)
+plot.enet(mod_lasso$finalModel, xvar="penalty", use.color=TRUE)
+
+require(dplyr)
+# lets look at the outliers
+table(ccData$LIMIT_BAL)
+
+filter (ccData, LIMIT_BAL > 500000) %>%
+    select(EDUCATION, default.payment.next.month)
+?qplot
+?xyplot
+qplot(PAY_AMT1,BILL_AMT1,data=ccData, col=default.payment.next.month)

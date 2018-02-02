@@ -9,25 +9,27 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
 require(tidyverse)
 require(xlsx)
+require(dplyr)
+require(ggplot2)
 ```
 
 ## Basic Data Analysis
 
 This report focused on reading several data sets, performing exploratory data analysis and saving a tidy data set to use for modeling.
 
+List of [https://vincentarelbundock.github.io/Rdatasets/datasets.html](Data Sources)
 
 We want to find something with at least 10 features, and 5000 observations
 [https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table]
 
 * [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
 
-* [https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis](Sensorless drive) - 49 attributs, 11 classes, 58000 records
+* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records
 
-* [https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients](card payment) binary classifier with 23 predictors
+### Credit Payment Dataset
+This comes from [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
 
 ```{r loaddata, echo=FALSE}
-training <- data.frame(a=c(1,2,3),b=c(1,2,3))
-
 
 ccDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00350/default%20of%20credit%20card%20clients.xls"
 ccDataFile <- "./data/ccDataFile.xls"
@@ -50,17 +52,45 @@ fCols <- c("SEX", "EDUCATION", "MARRIAGE", "default.payment.next.month")
 nCols <- c("LIMIT_BAL", "AGE", "PAY_0", "PAY_2", "PAY_3", "PAY_4", "PAY_5", "PAY_6",
            "BILL_AMT1", "BILL_AMT2", "BILL_AMT3", "BILL_AMT4", "BILL_AMT5", "BILL_AMT6", 
            "PAY_AMT1", "PAY_AMT2", "PAY_AMT3", "PAY_AMT4", "PAY_AMT5", "PAY_AMT6" )
-ccData <- mutate_at(ccData, fCols, funs(factor(.))) %>%
+ccData <- select(ccData, -(ID)) %>% 
+    mutate_at(fCols, funs(factor(.))) %>%
     mutate_at(nCols, funs(as.numeric(.)))
+
+# go ahead and write it out for future notebooks
+save(ccData, file="data/ccData.RData")
 summary(ccData)
 ```
 
+Some tables
+```{r ccTables}
+hist(ccData$LIMIT_BAL)
+
+#hist(ccData$SEX)
+#hist(ccData$MARRIAGE)
+hist(ccData$AGE)
+
+hist(ccData$PAY_0)
+```
+
+
 ## Plots
+
+Here we can see that if the bill amounts are much higher, more likely to default
+```{r plot}
+#ggplot(ccData, aes(PAY_AMT1, fill=MARRIAGE)) +
+#    geom_density(alpha=0.3)
+qplot(PAY_AMT1,BILL_AMT1,data=ccData, col=default.payment.next.month)
+qplot(PAY_AMT2,BILL_AMT2,data=ccData, col=default.payment.next.month)
+qplot(PAY_AMT3,BILL_AMT3,data=ccData, col=default.payment.next.month)
+
+```
 
 Lets look at the table of SEX, Marriage, education to the *default.payment.next.month* indicator.
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
+
+## Save Formatted Data
+Finally Save the datasets
 ```{r writeData}
 save(ccData, file="ccData.RData")
 
