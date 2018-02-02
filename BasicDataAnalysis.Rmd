@@ -144,6 +144,10 @@ qplot(Jitter.DDP, fill=status, alpha=I(.5), geom="density", data=pkData)
 
 qplot(MDVP.Shimmer, fill=status, alpha=I(.5), geom="density", data=pkData)
 
+qplot(PPE, fill=status, alpha=I(.5), geom="density", data=pkData)
+
+qplot(spread1, fill=status, alpha=I(.5), geom="density", data=pkData)
+
 ```
 
 #### References

@@ -54,5 +54,15 @@ $$
 \frac{\bar{X} - \mu}{s/\sqrt{n}} > Z_{1-\alpha}
 $$
 
-
+## Residual Plotting
+Include This
+#  note I saved this locally on H:/Programming/datasets
+```{r orly}
+dat <- read.table("http://www4.stat.ncsu.edu/~stefanski/NSF_Supported/Hidden_Images/orly_owl_files/orly_owl_Lin_4p_5_flat.txt", header=FALSE)
+pairs(dat)
+head(dat)
+fit <- lm(V1 ~ . -1, data=dat)
+summary(fit)$coef
+plot(predict(fit), resid(fit), pch='.')
+```
 

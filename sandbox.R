@@ -79,6 +79,34 @@ if (!file.exists(pkDataFile)) {
 }
 pkData <- read.csv(file = pkDataFile)
 
+load("data/pkData.RData")
+require(caret)
 
 fit <- train(status ~ ., data=pkData)
-require(caret)
+plot(fit)
+summary(fit$importance)
+plot(fit$finalModel)
+
+
+
+#### linear regression thing to try
+#  note I saved this locally on H:/Programming/datasets
+dat <- read.table("http://www4.stat.ncsu.edu/~stefanski/NSF_Supported/Hidden_Images/orly_owl_files/orly_owl_Lin_4p_5_flat.txt", header=FALSE)
+pairs(dat)
+fit <- lm(V1 ~ . -1, data=dat)
+summary(fit)$coef
+plot(predict(fit), resid(fit), pch='.')
+#########
+
+
+# back To PK
+
+inTrain <- createDataPartition(pkData$status, p=0.8, list=FALSE)
+training <- pkData[inTrain,]
+testing <- pkData[-inTrain,]
+control <- trainControl(method="cv", number=4)
+set.seed(10)
+fit.lda <- train(status ~ ., data=training, method="lda")
+
+
+fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)

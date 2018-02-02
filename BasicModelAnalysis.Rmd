@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+require(caret)
 ```
 
 ## Basic Model Analysis
@@ -36,8 +37,9 @@ We want to find something with at least 10 features, and 5000 observations
 * [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
 
 ```{r loaddata}
-#load("data/ccData.RData")
-data("possum", package="DAAG")
+load("data/ccData.RData")
+load("data/pkData.RData")
+#data("possum", package="DAAG")
 
 ```
 
@@ -50,21 +52,53 @@ nzv <- nearZeroVar(data)
 
 ```
 
-## Data Summary
+## Parkinsons
 
-You can also embed plots, for example:
-
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
-Q what correlates most to Sex?
-
-## Plots
+Let's take a closer look at the data
 
 ```{r plot}
-#require(ggplot2)
-#qplot(possum, x=eye, y=totlngth, col=sex, size=log(age))
+pkFit <- train(status ~ ., data=pkData)
+varImp(pkFit)
+plot(pkFit)
+plot(pkFit$finalModel)
+pkFit$finalModel
+```
 
+Now let's pull out a training and test set and see what kind of predictions we can make with this
+
+```{r pkModel, echo=FALSE}
+inTrain <- createDataPartition(pkData$status, p=0.8, list=FALSE)
+training <- pkData[inTrain,]
+testing <- pkData[-inTrain,]
+control <- trainControl(method="cv", number=4)
+# metric <- "Accuracy"
+```
+Expirement with different models
+
+```{r pkModel2}
+set.seed(10)
+fit.rf <- train(status ~ ., data=training, method="rf", trControl=control)
+
+set.seed(10)
+fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)
+
+results <- resamples(list(lda=fit.rf, knn=fit.knn))
+summary(results)
+```
+
+check some predictions
+
+```{r pkPredict}
+predict.rf <- predict(fit.rf, newdata=testing)
+confMat.rf <- confusionMatrix(predict.rf, testing$status)
+
+predict.knn <- predict(fit.knn, newdata=testing)
+confMat.knn <- confusionMatrix(predict.knn, testing$status)
+
+performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall), 3), ncol=2)
+colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors')
+print(as.table(performance))
 ```
 
 
+Fina
