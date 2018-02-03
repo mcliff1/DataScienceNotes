@@ -110,3 +110,22 @@ fit.lda <- train(status ~ ., data=training, method="lda")
 
 
 fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)
+
+pdData <- pkData
+
+
+# notes from
+#https://www.kaggle.com/bwboerman/a-first-dive-with-r-s-data-table-and-caret
+
+variablesFactor <- colnames(pdData)[which(as.vector(pdData[,names(sapply(pdData, class))]) == "character")]
+
+which(as.vector(pdData[,sapply(pdData, class)]) == "character")
+
+pdData[,sapply(pdData, class)]
+names(sapply(pdData, class))
+pdData[, names(sapply(pdData, class))]
+
+
+variablesNumeric <- sapply(pdData, is.numeric) # both numeric integers
+corrData <- pdData[, names(variablesNumeric)]
+names(variablesNumeric)

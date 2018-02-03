@@ -17,6 +17,8 @@ then run numerous models to exhaustion to identify to best one or ones to tune.
 
 To begin with I will need to limit the problem domain based on regression or classification methods, although the underlying mechanics is almost always linear algebra the approaches to these problems can diverge significantly.
 
+In this case we will focus on the Parkison's dataset with 197 observations, and 23 predictors of a binary outcome.
+
 ### Classification Problem
 
 The Classification (value) problem is defined as one where a particular observation of $n$ predictors will have a single valued dependent (predicted) variable that is from a finite class.  The predictor or indepdenent variables can be either finite valued or real valued (or vector valued).
@@ -26,9 +28,9 @@ Our goal is to come up with some model function $f: \mathbb{X}_1 \times \mathbb{
 Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practicle restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.
 
 We want to find something with at least 10 features, and 5000 observations
-[https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table]
+[UCI Datasets](https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table)
 
-* [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
+* [Buzz in Social Media](https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+)
 
 * [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records
 
@@ -38,7 +40,7 @@ We want to find something with at least 10 features, and 5000 observations
 
 ```{r loaddata}
 load("data/ccData.RData")
-load("data/pkData.RData")
+load("data/pdData.RData")
 #data("possum", package="DAAG")
 
 ```
@@ -47,35 +49,34 @@ The basic approach will be to ensure no zero elements
 NAndx <- sapply(data, function(x) mean(is.na(x))) > .9
 nzv <- nearZeroVar(data)
 
-```{r pulldata}
 
-
-```
 
 ## Parkinsons
 
 Let's take a closer look at the data
 
 ```{r plot}
-pkFit <- train(status ~ ., data=pkData)
-varImp(pkFit)
-plot(pkFit)
-plot(pkFit$finalModel)
-pkFit$finalModel
+pdFit <- train(status ~ ., data=pdData)
+plot(varImp(pdFit, varImp.train=FALSE), top=10)
+plot(pdFit)
+plot(pdFit$finalModel)
+pdFit$finalModel
 ```
 
 Now let's pull out a training and test set and see what kind of predictions we can make with this
 
 ```{r pkModel, echo=FALSE}
-inTrain <- createDataPartition(pkData$status, p=0.8, list=FALSE)
-training <- pkData[inTrain,]
-testing <- pkData[-inTrain,]
-control <- trainControl(method="cv", number=4)
+inTrain <- createDataPartition(pdData$status, p=0.8, list=FALSE)
+training <- pdData[inTrain,]
+testing <- pdData[-inTrain,]
+control <- trainControl(method="cv", number=4, allowParallel=TRUE)
 # metric <- "Accuracy"
 ```
 Expirement with different models
 
 ```{r pkModel2}
+#formula.all <- as.forumula(paste("status ~ ", paste(features, collapse="+")))
+
 set.seed(10)
 fit.rf <- train(status ~ ., data=training, method="rf", trControl=control)
 
@@ -84,6 +85,8 @@ fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)
 
 results <- resamples(list(lda=fit.rf, knn=fit.knn))
 summary(results)
+
+
 ```
 
 check some predictions

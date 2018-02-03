@@ -11,6 +11,8 @@ require(tidyverse)
 require(xlsx)
 require(dplyr)
 require(ggplot2)
+require(data.table)
+require(dplyr)
 ```
 
 ## Basic Data Analysis
@@ -123,32 +125,47 @@ spread1,spread2,PPE - Three nonlinear measures of fundamental frequency variatio
 status - Health status of the subject (one) - Parkinson's, (zero) - healthy
 ```{r loadPKdata, echo=FALSE}
 
-pkDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data"
-pkDataFile <- "./data/parkinsons.data"
+pdDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data"
+pdDataFile <- "./data/parkinsons.data"
 dir.create("data", showWarnings=FALSE)
-if (!file.exists(pkDataFile)) {
-    download.file(url=pkDataURL, destfile=pkDataFile)
+if (!file.exists(pdDataFile)) {
+    download.file(url=pdDataURL, destfile=pdDataFile)
 }
-pkData <- read.csv(file = pkDataFile)
-pkData <- select(pkData, -(name)) %>%
+pdData <- read.csv(file = pdDataFile)
+
+pdData <- select(pdData, -(name)) %>%
     mutate(status = factor(status))
-summary(pkData)
+summary(pdData)
 ```
 
 Let's take a look at some plots
-```{r plotPK}
-qplot(MDVP.Fo.Hz., fill=status, alpha=I(.5), data=pkData)
-qplot(MDVP.Jitter.Abs., fill=status, alpha=I(.5), geom="density", data=pkData)
+```{r plotPD}
+qplot(MDVP.Fo.Hz., fill=status, alpha=I(.5), data=pdData)
+qplot(MDVP.Jitter.Abs., fill=status, alpha=I(.5), geom="density", data=pdData)
 
-qplot(Jitter.DDP, fill=status, alpha=I(.5), geom="density", data=pkData)
+qplot(Jitter.DDP, fill=status, alpha=I(.5), geom="density", data=pdData)
 
-qplot(MDVP.Shimmer, fill=status, alpha=I(.5), geom="density", data=pkData)
+qplot(MDVP.Shimmer, fill=status, alpha=I(.5), geom="density", data=pdData)
 
-qplot(PPE, fill=status, alpha=I(.5), geom="density", data=pkData)
+qplot(PPE, fill=status, alpha=I(.5), geom="density", data=pdData)
 
-qplot(spread1, fill=status, alpha=I(.5), geom="density", data=pkData)
+qplot(spread1, fill=status, alpha=I(.5), geom="density", data=pdData)
 
 ```
+
+Lets look at some correlations
+```{r pdCorr}
+variablesNumeric <- sapply(pdData, is.numeric) # both numeric integers
+DT <- data.table(pdData)
+corrData <- DT[, ..variablesNumeric]
+corMatrix <- cor(corrData)
+corTable <- setDT(melt(corMatrix))[order(-value)][value!=-1]
+corTableStatus <- corTable[Var1=="status",][order(-value)]
+corTableHigh <- corTable[value > 0.8 | value < - 0.8][order(Var1,-value)]
+print(corTableHigh)
+```
+
+TODO - understand how to get the self-correlation removed
 
 #### References
 
@@ -167,6 +184,6 @@ BioMedical Engineering OnLine 2007, 6:23 (26 June 2007)
 Finally Save the datasets
 ```{r writeData}
 save(ccData, file="./data/ccData.RData")
-save(pkData, file="./data/pkData.RData")
+save(pdData, file="./data/pdData.RData")
 
 ```
