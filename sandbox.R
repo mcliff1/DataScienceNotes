@@ -129,3 +129,5 @@ pdData[, names(sapply(pdData, class))]
 variablesNumeric <- sapply(pdData, is.numeric) # both numeric integers
 corrData <- pdData[, names(variablesNumeric)]
 names(variablesNumeric)
+variablesNumeric
+corrData <- pdData[, names(variablesNumeric), with=FALSE]
