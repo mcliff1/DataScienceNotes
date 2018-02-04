@@ -8,6 +8,8 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 require(caret)
+require(caretEnsemble)
+require(dplyr)
 ```
 
 ## Basic Model Analysis
@@ -70,9 +72,13 @@ inTrain <- createDataPartition(pdData$status, p=0.8, list=FALSE)
 training <- pdData[inTrain,]
 testing <- pdData[-inTrain,]
 control <- trainControl(method="cv", number=4, allowParallel=TRUE)
+
+#preproc <- preProcess(select(training,-(status)), method=c("center", "scale", "pca"), thresh = 0.8)
+preproc <- preProcess(select(training,-(status)), method="pca", thresh = 0.8)
+
 # metric <- "Accuracy"
 ```
-Expirement with different models
+Experiment with different models
 
 ```{r pkModel2}
 #formula.all <- as.forumula(paste("status ~ ", paste(features, collapse="+")))
@@ -83,8 +89,12 @@ fit.rf <- train(status ~ ., data=training, method="rf", trControl=control)
 set.seed(10)
 fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)
 
-results <- resamples(list(lda=fit.rf, knn=fit.knn))
+set.seed(10)
+fit.glm <- train(status ~ ., data=training, method="glm", preProcess="pca", trControl = control)
+
+results <- resamples(list(rf=fit.rf, knn=fit.knn, glm=fit.glm))
 summary(results)
+
 
 
 ```
@@ -98,10 +108,36 @@ confMat.rf <- confusionMatrix(predict.rf, testing$status)
 predict.knn <- predict(fit.knn, newdata=testing)
 confMat.knn <- confusionMatrix(predict.knn, testing$status)
 
-performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall), 3), ncol=2)
-colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors')
+predict.glm <- predict(fit.glm, newdata=testing)
+confMat.glm <- confusionMatrix(predict.glm, testing$status)
+
+confMat.rf$overall
+confMat.knn$overall
+confMat.glm$overall
+
+performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall, confMat.glm$overall), 3), ncol=3)
+colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors', 'GLM pca')
 print(as.table(performance))
 ```
 
+Lastly try using caretEnsamble
+```{r caretEnsamble}
+xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
+                           gamma = 0, 
+                           colsample_bytree = 1.0, 
+                           subsample = 1.0, 
+                           min_child_weight = 4)
 
+glmGrid <- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
+
+#modelList <- caretList(
+#    status ~ ., data=training, trControl=control,
+#    tuneList = list(
+#        xgbTree = caretModelSpec(method="xgbTree", tuneGrid = xgbTreeGrid, nthread=8),
+#        glmnet = caretModelSpec(method="glm", tuneGrid=glmGrid)
+#    )
+#)
+#xyplot(resamples(modelList))
+
+```
 Fina
