@@ -1,15 +1,146 @@
 ---
-title: "BasicLinearRegression"
+title: "Linear Regression"
 author: "Matt Cliff"
-date: "January 28, 2018"
+date: "March 21, 2018"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+library(UsingR)
+library(dplyr)
+data(galton)
 ```
 
-## Linear Regression
+
+This survey paper provides references and insight into  [linear regression](https://en.wikipedia.org/wiki/Linear_regression). 
+
+### What are we trying to Solve?
+
+We begin with covering the types of problems we can solve, we typically work with a set of data that can be real-valued (although this can be extended) as a set of predictors $\{ X_i \}$ that map to a set of observations $\{ y_i \}$. 
+
+Some problems of interest are
+
+* what is the expected observation value for a new set of never before seen predictors?
+
+The term *regression* refers to *regression to the mean*, which is the idea that given a sequence of obseravations (along with predictors); if a particular observation is an outlier to the mean then it is expected that the next elemenent in the sequence will be closer to the mean. These concepts were first made popular by [Sir Francis Galton](https://en.wikipedia.org/wiki/Sir_Francis_Galton) in the ninetenth century.
+
+Some concrete examples would be
+
+* using the height of the father as the predictor for the height of the son as the observation; regression to the mean would say that we would expect very tall parents to have shorter children, and shorter parents to have taller children.
+
+in this simple 1-D example, we would assume we have the set $\{ X_i \}$ of measurements of the fathers; and we have $\{ y_i \}$ measurements of the sons. (this just so happens to be the classical example and case that Galton examined in the 1885)
+
+```{r galton, echo=FALSE, warning=FALSE}
+
+freqData <- galton %>%
+    group_by(parent, child) %>%
+    summarize(freq = n())
+
+ggplot(freqData, aes(x = parent, y = child)) +
+    scale_size(guide = "none") + 
+    geom_point(col = "blue", aes(size=freq+20)) +
+    stat_summary(fun.data = "mean_cl_boot") +
+    geom_abline(intercept = 0, slope=1, col="black", alpha=0.5) +
+    ggtitle("Galton dataset of parent height to child") +
+    geom_smooth(method='lm', se=FALSE, col="red") +
+    labs(x = "Height of Parent (in)", 
+         y = "Height of Child (in)")
+
+
+```
+
+
+The lighter line is the $y=x$ which represents the break-even for a child height, being the same height as the parent. The red line is the linear regression line, and the blue dots represent the data samples.  You can see the red line is more level than the diagonal, this is visualization shows that at the lower end, you are more likely to have a taller observation (shorter parents children are more likley to be taller than them).
+
+The Linear regression model is the one that assumes there is a linear relationship between the dependent variable (observation) $y_i$ and the regressor (predictor) $X_i$, that
+
+$$
+y_i = \beta_0 + \beta_1 x_i + \varepsilon_i, \text{ for each } i
+$$
+
+In the language of machine learning, the result of training the model is the method to identify the **best** $( \beta_0, \beta_1 )$, that is the values so that the set of *residuals* $\{ \epsilon_i \}$ is minimized.
+
+
+```{r plotResid, echo=FALSE}
+fit <- lm(child ~ parent, data=galton)
+
+freqData <- data.frame(p=predict(fit), r=resid(fit)) %>%
+    group_by(p,r) %>%
+    summarize(freq=n())
+
+ggplot(freqData, aes(x=p,y=r)) +
+    geom_point(col="red", aes(size=freq+20)) +
+    scale_size(guide = "none") + 
+    geom_abline(intercept = 0, slope=0, col="black") +
+    ggtitle("Galton dataset of parent height to child") +
+    labs(x = "Height of Parent (in)", 
+         y = "Residual Error (in)")
+
+
+```
+
+
+This abstracts for $y_i \in \mathbb{R}^M$ and $X_i \in \mathbb{R}^N$,  where the parameters $\beta_i$ and residuals $\epsilon_i$ are all in $\mathbb{R}^M$.
+
+A Linear Model is any model where the co-efficicents on the predictor terms are linear, the predictor terms themselves can be used in non-linear ways. For example we could use the parents height AND the square of the parents height (this would make more sense combining different predictors, but may expose some behaviour that is non-linear)
+
+$$
+y_i = \beta_0 + \beta_1 x_i + \beta_2 x_i^2 + \varepsilon_i, \text{ for each } i
+$$
+
+## Optimizing the model
+
+The goal is to minimize $\| \{ \varepsilon_i \} \|$, which involves identifying which norm (measurement) to use.
+
+In our example with Galton's heights we have, $M, N = 1$, and $n$ data points, using the Euclidean square-distance norm $\| x \|^2 = \sum_i x_i^2$.
+
+$$
+\| \{ \varepsilon_i \}^n_{i=1} \|^2 = \sum_{i=1}^n \varepsilon_i^2 
+= \sum_i^n \left( y_i - (\beta_0 + \beta_1 x_i )  \right)^2
+= S(\beta), \text{ where } \beta \in \mathbb{R}^2
+$$
+
+This is called the *Optimized Least Squares*, to solve the problem of $\min_\beta S(\beta)$, we find when the gradients are zero since this is a quadratic, the gradients are linear functions, and there is an easy to calculate solution.
+
+In the case of our 1 dimensional example, we have $S : \mathbb{R}^2 \to \mathbb{R}$, which is explicitly solved as ([ref](https://en.wikipedia.org/wiki/Simple_linear_regression#cite_note-5))
+
+$$
+\begin{aligned}
+\beta_0 & = \frac{1}{n} \left( \sum_{i=1}^n y_i - \beta_1 \sum_{i=1}^n x_i \right) =  \bar{y} - \beta_1 \bar{x}, \\
+\beta_1 & = \frac{\sum_{i=1}^n (x_i - \bar{x})(y_i - \bar{y})}{\sum_{i=1}^n (x_i - \bar{x})^2} = \frac{ \text{Cov}(x,y)}{\text{Var(x)}}
+\end{aligned}
+$$
+
+
+
+The value $\beta_1$ is the slope of the linear regression model (or fit), this represents the amount of change in the observation per unit change in the predictor.
+
+
+### Nice Facts about OLS
+
+Why is the square norm used?
+
+Fun Facts
+ 
+ * given a vector $X = \{ x_i \}$, the value $\alpha$ that will minimize $\| X - \alpha \|$ is the mean of $x_i$.
+ 
+ Given vector $X$, minimize $\| X - \alpha \|$.
+ 
+ Answer $E[X] = \frac{1}{n} \sum_{i=1}^n x_i$.
+ 
+ 
+* Given 2 sets of $N$ numbers $X$ and $Y$, find the $\alpha$ so we minimize $\| Y - \alpha X \|$.
+
+Answer $E[Y]/E[X] = \frac{\sum y_i}{\sum x_i}$
+ 
+ 
+* Ordinary Least Squares
+* Maximum likelihood estimation
+
+
+
+To the mathematician we would look at the $L^1$, or $L^2$ norm, to the lay-person these are called the 
 
 Why do we use the square of delta's when estimating linear regression?
 
@@ -28,6 +159,7 @@ $$
 $$
 \sum_{i=1}^n y_i = \alpha  n
 $$
+
 We also have
 $$
 \alpha \ni \min_{\alpha} \sum_{i=1}^n (y_i - \alpha x_i)^2 = \frac{\sum y_i}{\sum x_i}
@@ -43,7 +175,7 @@ $$
 \sum_{i=1}^n y_i = \alpha \sum_{x=1}^n   x_i
 $$
 
-since we're just laying out formula  to get Degrees of freedome we have this for 2 populations with different variances  TODO = look this up from Wek 1 of Regression models
+since we're just laying out formula  to get Degrees of freedom we have this for 2 populations with different variances  TODO = look this up from Wek 1 of Regression models
 $$
 df = \frac{ \left( {S_x}^2/n_x + {S_y}^2/n_y \right)^2 }{ \left( {S_x}^2 / n_x \right)^2} \dots
 $$
