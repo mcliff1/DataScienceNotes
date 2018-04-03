@@ -137,7 +137,7 @@ $(document).ready(function () {
 </ul>
 <div id="credit-payment-dataset" class="section level3">
 <h3>Credit Payment Dataset</h3>
-<p>This comes from <a href="https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients">card payment</a> binary classifier with 23 predictors</p>
+<p>This comes from <a href="https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients">card payment</a> binary classifier with 23 predictors; Default of Credit Card Clients in Taiwan from 2005</p>
 <p>The basic approach will be to ensure no zero elements NAndx &lt;- sapply(data, function(x) mean(is.na(x))) &gt; .9 nzv &lt;- nearZeroVar(data)</p>
 <pre><code>   LIMIT_BAL       SEX       EDUCATION MARRIAGE       AGE       
  Min.   :  10000   1:11888   0:   14   0:   54   Min.   :21.00  
@@ -278,7 +278,7 @@ corMatrix &lt;- cor(corrData)
 corTable &lt;- setDT(melt(corMatrix))[order(-value)][value!=-1]
 corTableStatus &lt;- corTable[Var1==&quot;status&quot;,][order(-value)]
 corTableHigh &lt;- corTable[value &gt; 0.8 | value &lt; - 0.8][order(Var1,-value)]
-corTableHigh</code></pre>
+print(corTableHigh)</code></pre>
 <pre><code>               Var1           Var2     value
   1:    MDVP.Fo.Hz.    MDVP.Fo.Hz. 1.0000000
   2:   MDVP.Fhi.Hz.   MDVP.Fhi.Hz. 1.0000000
@@ -291,6 +291,7 @@ corTableHigh</code></pre>
 100:             D2             D2 1.0000000
 101:            PPE            PPE 1.0000000
 102:            PPE        spread1 0.9624353</code></pre>
+<p>TODO - understand how to get the self-correlation removed</p>
 <div id="references" class="section level4">
 <h4>References</h4>
 <p>Max A. Little, Patrick E. McSharry, Eric J. Hunter, Lorraine O. Ramig (2008), ‘Suitability of dysphonia measurements for telemonitoring of Parkinson’s disease’, IEEE Transactions on Biomedical Engineering (to appear).</p>

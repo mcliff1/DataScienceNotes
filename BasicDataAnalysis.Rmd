@@ -32,7 +32,7 @@ We want to find something with at least 10 features, and 5000 observations
 
 
 ### Credit Payment Dataset
-This comes from [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
+This comes from [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors; Default of Credit Card Clients in Taiwan from 2005
 
 ```{r loaddata, echo=FALSE}
 

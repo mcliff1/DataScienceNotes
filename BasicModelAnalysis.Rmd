@@ -1,5 +1,5 @@
 ---
-title: "BasicModelAnalysis"
+title: "Classification Model Analysis"
 author: "Matt Cliff"
 date: "January 29, 2018"
 output: html_document
@@ -12,14 +12,21 @@ require(caretEnsemble)
 require(dplyr)
 ```
 
-## Basic Model Analysis
+The purpose of this paper is to provide a summary of classification methods, understanding how to enhance a dataset and what features may drive model selection.
+Look forward to another composition for regression methods.
 
-My goal is to set up a page that I can inject a dataset into
-then run numerous models to exhaustion to identify to best one or ones to tune.
 
-To begin with I will need to limit the problem domain based on regression or classification methods, although the underlying mechanics is almost always linear algebra the approaches to these problems can diverge significantly.
+Steps 
 
-In this case we will focus on the Parkison's dataset with 197 observations, and 23 predictors of a binary outcome.
+
+* data needs to be clean enough to have no zero elements
+
+* first use the generic train() method from caret package to plot the mose important variables (default uses random forest)
+
+* Random forest can tell us feature importance and when the accuracy drops off based off # of randomly selected predictors
+
+* break data into test/training set or cross-validation set and run confusion matrix against numerous methods
+
 
 ### Classification Problem
 
@@ -27,10 +34,12 @@ The Classification (value) problem is defined as one where a particular observat
 
 Our goal is to come up with some model function $f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}$ that matches our data and we think can best be used to predict the dependent variable for future observations from the domain space.
 
-Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practicle restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.
+Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practical restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.
 
 We want to find something with at least 10 features, and 5000 observations
 [UCI Datasets](https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table)
+
+* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 observations
 
 * [Buzz in Social Media](https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+)
 
@@ -38,8 +47,9 @@ We want to find something with at least 10 features, and 5000 observations
 
 * [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
 
-* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
 
+
+These are created in Basic Data Analysis Markdown.
 ```{r loaddata}
 load("data/ccData.RData")
 load("data/pdData.RData")
@@ -117,6 +127,7 @@ confMat.glm$overall
 
 performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall, confMat.glm$overall), 3), ncol=3)
 colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors', 'GLM pca')
+rownames(performance) <- c('Accuracy', 'Kappa', 'AccuracyLower', 'AccuracyUpper', 'AccuracyNull', 'AccuracyPValue', 'McnemarPValue')
 print(as.table(performance))
 ```
 
