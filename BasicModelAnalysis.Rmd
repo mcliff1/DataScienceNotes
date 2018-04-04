@@ -1,5 +1,5 @@
 ---
-title: "BasicModelAnalysis"
+title: "Classification Model Analysis"
 author: "Matt Cliff"
 date: "January 29, 2018"
 output: html_document
@@ -7,14 +7,26 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+require(caret)
+require(caretEnsemble)
+require(dplyr)
 ```
 
-## Basic Model Analysis
+The purpose of this paper is to provide a summary of classification methods, understanding how to enhance a dataset and what features may drive model selection.
+Look forward to another composition for regression methods.
 
-My goal is to set up a page that I can inject a dataset into
-then run numerous models to exhaustion to identify to best one or ones to tune.
 
-To begin with I will need to limit the problem domain based on regression or classification methods, although the underlying mechanics is almost always linear algebra the approaches to these problems can diverge significantly.
+Steps 
+
+
+* data needs to be clean enough to have no zero elements
+
+* first use the generic train() method from caret package to plot the mose important variables (default uses random forest)
+
+* Random forest can tell us feature importance and when the accuracy drops off based off # of randomly selected predictors
+
+* break data into test/training set or cross-validation set and run confusion matrix against numerous methods
+
 
 ### Classification Problem
 
@@ -22,18 +34,121 @@ The Classification (value) problem is defined as one where a particular observat
 
 Our goal is to come up with some model function $f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}$ that matches our data and we think can best be used to predict the dependent variable for future observations from the domain space.
 
-Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practicle restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.
+Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practical restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.
 
 We want to find something with at least 10 features, and 5000 observations
-[https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table]
+[UCI Datasets](https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table)
 
-* [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
+* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 observations
+
+* [Buzz in Social Media](https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+)
+
+* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records
+
+* [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
 
 
 
-## Including Plots
+These are created in Basic Data Analysis Markdown.
+```{r loaddata}
+load("data/ccData.RData")
+load("data/pdData.RData")
+#data("possum", package="DAAG")
 
-You can also embed plots, for example:
+```
+
+The basic approach will be to ensure no zero elements
+NAndx <- sapply(data, function(x) mean(is.na(x))) > .9
+nzv <- nearZeroVar(data)
 
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+## Parkinsons
+
+Let's take a closer look at the data
+
+```{r plot}
+pdFit <- train(status ~ ., data=pdData)
+plot(varImp(pdFit, varImp.train=FALSE), top=10)
+plot(pdFit)
+plot(pdFit$finalModel)
+pdFit$finalModel
+```
+
+Now let's pull out a training and test set and see what kind of predictions we can make with this
+
+```{r pkModel, echo=FALSE}
+inTrain <- createDataPartition(pdData$status, p=0.8, list=FALSE)
+training <- pdData[inTrain,]
+testing <- pdData[-inTrain,]
+control <- trainControl(method="cv", number=4, allowParallel=TRUE)
+
+#preproc <- preProcess(select(training,-(status)), method=c("center", "scale", "pca"), thresh = 0.8)
+preproc <- preProcess(select(training,-(status)), method="pca", thresh = 0.8)
+
+# metric <- "Accuracy"
+```
+Experiment with different models
+
+```{r pkModel2}
+#formula.all <- as.forumula(paste("status ~ ", paste(features, collapse="+")))
+
+set.seed(10)
+fit.rf <- train(status ~ ., data=training, method="rf", trControl=control)
+
+set.seed(10)
+fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)
+
+set.seed(10)
+fit.glm <- train(status ~ ., data=training, method="glm", preProcess="pca", trControl = control)
+
+results <- resamples(list(rf=fit.rf, knn=fit.knn, glm=fit.glm))
+summary(results)
+
+
+
+```
+
+check some predictions
+
+```{r pkPredict}
+predict.rf <- predict(fit.rf, newdata=testing)
+confMat.rf <- confusionMatrix(predict.rf, testing$status)
+
+predict.knn <- predict(fit.knn, newdata=testing)
+confMat.knn <- confusionMatrix(predict.knn, testing$status)
+
+predict.glm <- predict(fit.glm, newdata=testing)
+confMat.glm <- confusionMatrix(predict.glm, testing$status)
+
+confMat.rf$overall
+confMat.knn$overall
+confMat.glm$overall
+
+performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall, confMat.glm$overall), 3), ncol=3)
+colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors', 'GLM pca')
+rownames(performance) <- c('Accuracy', 'Kappa', 'AccuracyLower', 'AccuracyUpper', 'AccuracyNull', 'AccuracyPValue', 'McnemarPValue')
+print(as.table(performance))
+```
+
+Lastly try using caretEnsamble
+```{r caretEnsamble}
+xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
+                           gamma = 0, 
+                           colsample_bytree = 1.0, 
+                           subsample = 1.0, 
+                           min_child_weight = 4)
+
+glmGrid <- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
+
+#modelList <- caretList(
+#    status ~ ., data=training, trControl=control,
+#    tuneList = list(
+#        xgbTree = caretModelSpec(method="xgbTree", tuneGrid = xgbTreeGrid, nthread=8),
+#        glmnet = caretModelSpec(method="glm", tuneGrid=glmGrid)
+#    )
+#)
+#xyplot(resamples(modelList))
+
+```
+Fina

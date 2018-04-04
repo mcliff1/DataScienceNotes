@@ -1,0 +1,189 @@
+---
+title: "BasicDataAnalysis"
+author: "Matt Cliff"
+date: "January 29, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
+require(tidyverse)
+require(xlsx)
+require(dplyr)
+require(ggplot2)
+require(data.table)
+require(dplyr)
+```
+
+## Basic Data Analysis
+
+This report focused on reading several data sets, performing exploratory data analysis and saving a tidy data set to use for modeling.
+
+List of [https://vincentarelbundock.github.io/Rdatasets/datasets.html](Data Sources)
+
+We want to find something with at least 10 features, and 5000 observations
+[https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table]
+
+* [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
+
+* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records 
+* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
+* [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
+
+
+### Credit Payment Dataset
+This comes from [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors; Default of Credit Card Clients in Taiwan from 2005
+
+```{r loaddata, echo=FALSE}
+
+ccDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/00350/default%20of%20credit%20card%20clients.xls"
+ccDataFile <- "./data/ccDataFile.xls"
+dir.create("data", showWarnings=FALSE)
+if (!file.exists(ccDataFile)) {
+    download.file(url=ccDataURL, destfile=ccDataFile, mode="wb")
+}
+ccData <- read.xlsx2(file=ccDataFile, sheetIndex=1, startRow=2, stringsAsFactors=FALSE)
+
+
+```
+
+The basic approach will be to ensure no zero elements
+NAndx <- sapply(data, function(x) mean(is.na(x))) > .9
+nzv <- nearZeroVar(data)
+
+```{r pulldata, echo=FALSE, warning=FALSE}
+
+fCols <- c("SEX", "EDUCATION", "MARRIAGE", "default.payment.next.month")
+nCols <- c("LIMIT_BAL", "AGE", "PAY_0", "PAY_2", "PAY_3", "PAY_4", "PAY_5", "PAY_6",
+           "BILL_AMT1", "BILL_AMT2", "BILL_AMT3", "BILL_AMT4", "BILL_AMT5", "BILL_AMT6", 
+           "PAY_AMT1", "PAY_AMT2", "PAY_AMT3", "PAY_AMT4", "PAY_AMT5", "PAY_AMT6" )
+ccData <- select(ccData, -(ID)) %>% 
+    mutate_at(fCols, funs(factor(.))) %>%
+    mutate_at(nCols, funs(as.numeric(.)))
+
+# go ahead and write it out for future notebooks
+save(ccData, file="data/ccData.RData")
+summary(ccData)
+```
+
+Some tables
+```{r ccTables}
+hist(ccData$LIMIT_BAL)
+
+#hist(ccData$SEX)
+#hist(ccData$MARRIAGE)
+hist(ccData$AGE)
+
+hist(ccData$PAY_0)
+```
+
+Here we can see that if the bill amounts are much higher, more likely to default
+```{r plot}
+#ggplot(ccData, aes(PAY_AMT1, fill=MARRIAGE)) +
+#    geom_density(alpha=0.3)
+qplot(PAY_AMT1,BILL_AMT1,data=ccData, col=default.payment.next.month)
+qplot(PAY_AMT2,BILL_AMT2,data=ccData, col=default.payment.next.month)
+qplot(PAY_AMT3,BILL_AMT3,data=ccData, col=default.payment.next.month)
+
+```
+
+Lets look at the table of SEX, Marriage, education to the *default.payment.next.month* indicator.
+
+
+
+### Parkinsons
+
+This dataset is composed of a range of biomedical voice measurements from 
+31 people, 23 with Parkinson's disease (PD). Each column in the table is a 
+particular voice measure, and each row corresponds one of 195 voice 
+recording from these individuals ("name" column). The main aim of the data 
+is to discriminate healthy people from those with PD, according to "status" 
+column which is set to 0 for healthy and 1 for PD.
+
+ There are around six 
+recordings per patient, the name of the patient is identified in the first 
+column.
+
+
+(https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
+
+
+Matrix column entries (attributes):
+name - ASCII subject name and recording number
+MDVP:Fo(Hz) - Average vocal fundamental frequency
+MDVP:Fhi(Hz) - Maximum vocal fundamental frequency
+MDVP:Flo(Hz) - Minimum vocal fundamental frequency
+MDVP:Jitter(%),MDVP:Jitter(Abs),MDVP:RAP,MDVP:PPQ,Jitter:DDP - Several 
+measures of variation in fundamental frequency
+MDVP:Shimmer,MDVP:Shimmer(dB),Shimmer:APQ3,Shimmer:APQ5,MDVP:APQ,Shimmer:DDA - Several measures of variation in amplitude
+NHR,HNR - Two measures of ratio of noise to tonal components in the voice
+status - Health status of the subject (one) - Parkinson's, (zero) - healthy
+RPDE,D2 - Two nonlinear dynamical complexity measures
+DFA - Signal fractal scaling exponent
+spread1,spread2,PPE - Three nonlinear measures of fundamental frequency variation 
+
+status - Health status of the subject (one) - Parkinson's, (zero) - healthy
+```{r loadPKdata, echo=FALSE}
+
+pdDataURL <- "https://archive.ics.uci.edu/ml/machine-learning-databases/parkinsons/parkinsons.data"
+pdDataFile <- "./data/parkinsons.data"
+dir.create("data", showWarnings=FALSE)
+if (!file.exists(pdDataFile)) {
+    download.file(url=pdDataURL, destfile=pdDataFile)
+}
+pdData <- read.csv(file = pdDataFile)
+
+pdData <- select(pdData, -(name)) %>%
+    mutate(status = factor(status))
+summary(pdData)
+```
+
+Let's take a look at some plots
+```{r plotPD}
+qplot(MDVP.Fo.Hz., fill=status, alpha=I(.5), data=pdData)
+qplot(MDVP.Jitter.Abs., fill=status, alpha=I(.5), geom="density", data=pdData)
+
+qplot(Jitter.DDP, fill=status, alpha=I(.5), geom="density", data=pdData)
+
+qplot(MDVP.Shimmer, fill=status, alpha=I(.5), geom="density", data=pdData)
+
+qplot(PPE, fill=status, alpha=I(.5), geom="density", data=pdData)
+
+qplot(spread1, fill=status, alpha=I(.5), geom="density", data=pdData)
+
+```
+
+Lets look at some correlations
+```{r pdCorr}
+variablesNumeric <- sapply(pdData, is.numeric) # both numeric integers
+DT <- data.table(pdData)
+corrData <- DT[, ..variablesNumeric]
+corMatrix <- cor(corrData)
+corTable <- setDT(melt(corMatrix))[order(-value)][value!=-1]
+corTableStatus <- corTable[Var1=="status",][order(-value)]
+corTableHigh <- corTable[value > 0.8 | value < - 0.8][order(Var1,-value)]
+print(corTableHigh)
+```
+
+TODO - understand how to get the self-correlation removed
+
+#### References
+
+Max A. Little, Patrick E. McSharry, Eric J. Hunter, Lorraine O. Ramig (2008), 
+'Suitability of dysphonia measurements for telemonitoring of Parkinson's disease', 
+IEEE Transactions on Biomedical Engineering (to appear).
+
+'Exploiting Nonlinear Recurrence and Fractal Scaling Properties for Voice Disorder Detection', 
+Little MA, McSharry PE, Roberts SJ, Costello DAE, Moroz IM. 
+BioMedical Engineering OnLine 2007, 6:23 (26 June 2007)
+
+
+
+
+## Save Formatted Data
+Finally Save the datasets
+```{r writeData}
+save(ccData, file="./data/ccData.RData")
+save(pdData, file="./data/pdData.RData")
+
+```
