@@ -11,6 +11,9 @@ require(dplyr)
 require(ggplot2)
 require(leaflet)
 require(tibble)
+require(tidyr)
+require(htmltools)
+
 ```
 
 ## Neighborhood Charts
@@ -103,7 +106,94 @@ Ok that is looking good
 
 3 data sets
 
-* street lights
+* [street lights](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-street-light-poles)
 * [311 calls](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-311-service-requests-2007-to-current)
 * [foodstore locations](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-food-stores)
-* [addresses lat/lng to denver address](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-addresses)
+* **reference** [addresses lat/lng to denver address](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-addresses)
+
+
+### Street Lights
+
+```{r loadLightData, warning=FALSE}
+datafile <- "streetlight.csv"
+fileURL <- "https://www.denvergov.org/media/gis/DataCatalog/street_light_poles/csv/street_light_poles.csv"
+if(!file.exists(datafile)) {
+    download.file(fileURL, destfile=datafile)
+}
+streetlights <- read.csv(datafile)
+names(streetlights)
+
+#filter(lat < 39.763 & lat > 39.755) %>%
+#    filter(lng > -104.989 & lng < -104.981) %>%
+
+
+sldf <- subset(streetlights, 
+               select=c(ESRIGNSS_LATITUDE, ESRIGNSS_LONGITUDE, ROAD_TYPE, POLE_TYPE, POLE_HT, POWER_SRC, DIMMER, ESRIGNSS_ALTITUDE, OWNER, LOCATION, INSTALL_YEAR, POLE_COND, LUMIN_WATT)) %>%
+    rename(lat=ESRIGNSS_LATITUDE, lng=ESRIGNSS_LONGITUDE) %>%
+    filter(lat > 39.75 & lat < 39.77) %>%
+    filter(lng > -105.00 & lng < -104.96) %>%
+    extract(col="POLE_HT", into="ht", "([0-9]+)" ) %>%
+    extract(col="LUMIN_WATT", into="watts", "([0-9]+)" ) %>%
+    mutate(ht = as.numeric(ht)) %>%
+    mutate(watts = as.numeric(watts)) %>%
+    mutate(ps = ifelse(POWER_SRC == "Underground", "Underground", "Above Ground"))
+
+
+summary(sldf$ps)
+```
+
+
+The color represents if the powersource is underground or not, the size is propotional to the Lumin Wattage of the light.
+```{r cityLightOverview, warning=FALSE}
+
+pal <- colorFactor("Accent", domain=sldf$ps)
+
+label0 <- paste("Pole Type:", sldf$POLE_TYPE)
+label1 <- paste("Wattage:", sldf$watts)
+labels <- paste(label0,paste("\n", label1))
+
+leaflet(sldf) %>%
+    addTiles() %>%
+    addCircleMarkers(~lng, ~lat,
+               weight = 1,
+               radius= sldf$watts /20, 
+               fillOpacity=0.3, 
+               label = ~htmlEscape(labels),
+               color = ~pal(ps),
+               clusterOptions = markerClusterOptions()
+               ) %>%
+    addLegend("bottomright", pal = pal, values=sldf$ps, title="Power Supply") %>%
+    setView(lat=39.765, lng=-104.985, zoom = 15) %>%
+    addProviderTiles(providers$Esri.WorldImagery)
+
+```
+
+### Load the 311 data
+
+
+
+```{r load311Data, warning=FALSE}
+datafile <- "311service.csv"
+fileURL <- "https://www.denvergov.org/media/gis/DataCatalog/311_service_requests_2007_to_current/csv/311_service_requests_2007_to_current.csv"
+
+# 2016 only
+fileURL2 <- "https://www.denvergov.org/media/gis/DataCatalog/311_service_data/csv/311_service_data_2016.csv"
+
+
+if(!file.exists(datafile)) {
+    download.file(fileURL, destfile=datafile)
+}
+infocalls <- read.csv(datafile)
+names(infocalls)
+```
+ok... now in business
+
+
+## Write Output
+
+Write out the datasets for usage in the shiny app
+
+```{r saveDatasets}
+lights <- sldf
+save(trails, file="trails.RData")
+save(lights, file="lights.RData")

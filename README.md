@@ -1,12 +1,11 @@
-# TODO - change this to a online source to keep track of papers and documents
+## Data Science Notes
+This is a collection of notes and reports to highlight some introductory data science concepts
 
-on Jan 28, I connected a RStudio project to this repository locally
+* BasicModelAnalysis
+* MyNeighborhood - notebook about using leaflet to visualize geographic data
+* BasicDataAnalysis - include notes on linear regression and residuals
 
 
-## Data Analysis
-Notes on how to do a general data analysis
-## Residuals Study
-Pull out the primary linaer driver and look at the second
 
 # Getting and Cleaning Data  - Course Project
 Submission of Peer-graded assignment for: Getting and Cleaning data
