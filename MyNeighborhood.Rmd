@@ -183,11 +183,73 @@ fileURL2 <- "https://www.denvergov.org/media/gis/DataCatalog/311_service_data/cs
 if(!file.exists(datafile)) {
     download.file(fileURL, destfile=datafile)
 }
-infocalls <- read.csv(datafile)
-names(infocalls)
+raw_infocalls <- read.csv(datafile)
+names(raw_infocalls)
+dim(raw_infocalls)
+
+infocalls <- raw_infocalls %>%
+   rename(lat=Latitude, lng=Longitude) %>%
+    filter(lat > 39.75 & lat < 39.77) %>%
+    filter(lng > -105.00 & lng < -104.96)
+
+
 ```
 ok... now in business
 
+```{r three11Overview, warning=FALSE}
+leaflet(infocalls) %>%
+    addTiles() %>%
+    addCircleMarkers(~lng, ~lat,
+               weight = 1,
+               fillOpacity=0.3, 
+               clusterOptions = markerClusterOptions()
+               ) %>%
+    setView(lat=39.7, lng=-104.9, zoom = 10) %>%
+    addProviderTiles(providers$Esri.WorldImagery)
+
+```
+
+
+
+
+
+### grocery data
+
+
+```{r loadFoodData, warning=FALSE}
+datafile <- "food.csv"
+fileURL <- "https://www.denvergov.org/media/gis/DataCatalog/food_stores/csv/food_stores.csv"
+
+
+if(!file.exists(datafile)) {
+    download.file(fileURL, destfile=datafile)
+}
+raw_food <- read.csv(datafile)
+names(raw_food)
+summary(raw_food)
+
+food <- raw_food %>%
+   rename(lat=POINT_Y, lng=POINT_X, label=STORE_NAME)
+table(food$STORE_TYPE)
+```
+
+Basic Food plot
+```{r foodOverview, warning=FALSE}
+
+pal <- colorFactor("Accent", domain=food$STORE_TYPE)
+
+
+leaflet(food) %>%
+    addTiles() %>%
+    addCircleMarkers(~lng, ~lat, 
+               weight = 1,
+               fillOpacity = 0.3, 
+               color = ~pal(STORE_TYPE)
+               ) %>%
+        setView(lat=39.7, lng=-104.9, zoom = 10) %>%
+addProviderTiles(providers$Esri.WorldImagery)
+
+```
 
 ## Write Output
 
@@ -197,3 +259,5 @@ Write out the datasets for usage in the shiny app
 lights <- sldf
 save(trails, file="trails.RData")
 save(lights, file="lights.RData")
+save(infocalls, file="infocalls.RData")
+save(food, file="food.RData")
