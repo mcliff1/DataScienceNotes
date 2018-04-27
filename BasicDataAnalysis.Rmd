@@ -1,7 +1,7 @@
 ---
-title: "BasicDataAnalysis"
+title: "Exploratory Data Analysis"
 author: "Matt Cliff"
-date: "January 29, 2018"
+date: "April 16, 2018"
 output: html_document
 ---
 
@@ -15,23 +15,25 @@ require(data.table)
 require(dplyr)
 ```
 
-## Basic Data Analysis
 
-This report focused on reading several data sets, performing exploratory data analysis and saving a tidy data set to use for modeling.
+This report is focused on reading several data sets, performing exploratory data analysis and saving a tidy data set to use for modeling exploration.
+
+# Data Analysis Overview
+
 
 List of [https://vincentarelbundock.github.io/Rdatasets/datasets.html](Data Sources)
 
 We want to find something with at least 10 features, and 5000 observations
 [https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table]
 
-* [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
 
-* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records 
-* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
 * [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
+* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
+* [https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+](Buzz in Social Media)
+* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records 
 
 
-### Credit Payment Dataset
+## Credit Payment Dataset
 This comes from [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors; Default of Credit Card Clients in Taiwan from 2005
 
 ```{r loaddata, echo=FALSE}
@@ -91,7 +93,7 @@ Lets look at the table of SEX, Marriage, education to the *default.payment.next.
 
 
 
-### Parkinsons
+## Parkinsons
 
 This dataset is composed of a range of biomedical voice measurements from 
 31 people, 23 with Parkinson's disease (PD). Each column in the table is a 
@@ -167,7 +169,11 @@ print(corTableHigh)
 
 TODO - understand how to get the self-correlation removed
 
-#### References
+## Buzz in Social Media
+
+
+
+## References
 
 Max A. Little, Patrick E. McSharry, Eric J. Hunter, Lorraine O. Ramig (2008), 
 'Suitability of dysphonia measurements for telemonitoring of Parkinson's disease', 
