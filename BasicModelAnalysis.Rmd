@@ -12,7 +12,7 @@ require(caretEnsemble)
 require(dplyr)
 require(tictoc)
 library(e1071) #naiveBayes
-#library(mda) #mda
+library(mda) #mda
 #library(MASS) #qda
 
 ```
@@ -23,13 +23,11 @@ Look forward to another composition for regression methods.
 
 
 
-# General Classification Overview
-
 ## Classification Problem 
 
 The general **Classification** (value) problem is defined as one where the observation (or outcome) variable is a discrete value.  Some examples could be an outcome of *yes* or *no* or peforming character recognition on digits the outcome is one of 10 discrete values, *0* to *9*.  The predictors or indepdenent variables can be either discrete or real valued (or vector valued), we are only considering the cases wiht a finite number of predictors (for non-finite we are in the theory of *Functional Analysis*)
 
-The goal is given a set of observations in the space $\left( \mathbb{X}_1 \times \dots \times \mathbb{X}_n \right)$ to come up with a candidate function *f* defined $f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}$ that *matches* our training data as best we can and the function can be used to predict the dependent variable for future observations.
+The goal is given a set of observations and corresponding predictors in the space $\left( \mathbb{Y} \times \mathbb{X}_1 \times \dots \times \mathbb{X}_n \right)$ to come up with a candidate function *f* defined $f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}$ that _best matches_ our training data so that the function can be used to predict the outcome for future observations.
 
 Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practical restriction except that they **MUST** be valued, any missing data must be dealt with prior to using this package.
 
@@ -41,7 +39,19 @@ Do they 'retain' discrete attributes or convert them to real numbers?
 ### Linear Regression
 Linear Regression using [lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html)
 
-Expects the input data to be linearly seperable
+Expects the input data to be linearly seperable, best way to visualize this is in two dimensions, lots of data points that are color coded red or blue and try to draw a line between them
+
+```{r demolr, eval=FALSE}
+x=runif(100, min=-2, max=2)
+y=runif(100, min=-2, max=2)
+c=ifelse( abs(y - 2*x) > .2, ifelse(y>2*x, "red", "blue"), ifelse(rbinom(1,1,.5), "red", "blue"))
+demo_df = data.frame(x=x, y=y, c=c)
+
+predict_df<- data.frame(pred=predict(lm(y~x, data=demo_df), demo_df), 
+ggplot(data=demo_df, aes(x=x, y=y, col=c)) +
+    geom_point()
+```
+
 
 
 
@@ -51,11 +61,23 @@ Logistic Regression using [glm](http://stat.ethz.ch/R-manual/R-devel/library/sta
 
 Expects the input data to be linearly seperable
 
+Solves to problem where all the spaces are fields ($\mathbb{R}$), for classification problems they need to be converted to **one-hot** vectors, which can lead to a large **sparse matrix**. 
+
+This translates to a problem finding the best function $f:\mathbb{R}^N \to \mathbb{R}^M$ where *M* is the number of discrete outcomes, *N* is the sum of all discrete values across all variables.
+
+We try to  find $f$ in the form of
+$f(x_1, x_2, \dots, x_n) = \beta_0 + \beta_1 x_1 + \beta_n x_n$
+in the standard sense, or could more generally be any combination that is linear in $\beta$.
+
 
 ### Regression with Regularization
 Regression with Regularization [glmnet](https://cran.r-project.org/web/packages/glmnet/glmnet.pdf)
 
+
 ### Neural Netorks [nnet](https://cran.r-project.org/web/packages/nnet/nnet.pdf)
+
+Works on real numbers, must one-hot the space
+
 
 ### Support Vector Machines [svm](https://cran.r-project.org/web/packages/e1071/vignettes/svmdoc.pdf) from [e1071](https://cran.r-project.org/web/packages/e1071/e1071.pdf)
 
@@ -65,11 +87,19 @@ Naive Bayes [naiveBayes](http://ugrad.stat.ubc.ca/R/library/e1071/html/naiveBaye
 ### K-Nearest Neighbor
 K-Nearest Neighbor [knn](http://stat.ethz.ch/R-manual/R-devel/library/class/html/knn.html)
 
+
+
+
 ### Decision Tree
 Decision Tree [rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf)
 
+
 ### Ensembles of trees 
 Ensembles of trees [randomForest](https://cran.r-project.org/web/packages/randomForest/randomForest.pdf)
+
+
+the normal *rf* method takes FOREVER.
+
 
 ### Gradient Boosting
 Gradient Boosting [gbm](https://cran.r-project.org/web/packages/gbm/gbm.pdf)
@@ -182,7 +212,17 @@ then we evaluate the models side by side
 
 ```{r sampleFromWeb}
 trainData <- read.csv('https://raw.githubusercontent.com/selva86/datasets/master/breastcancer_training.csv')
+testData <- read.csv('https://raw.githubusercontent.com/selva86/datasets/master/breastcancer_test.csv')
 head(trainData)
+str(trainData)
+str(testData)
+
+logit.mod <- glm(Class ~ Cl.thickness + Cell.size + Cell.shape, family="binomial", data=trainData)
+
+pred <- predict(logit.mod, newdata=testData, type="response")
+y_pred <- ifelse(pred > 0.5, 1, 0)
+
+mean(y_pred == testData$Class)
 ```
 
 
@@ -220,7 +260,12 @@ inTrain <- createDataPartition(pdData$status, p=0.7, list=FALSE)
 training <- pdData[inTrain,]
 testing <- pdData[-inTrain,]
 table(training$status)
+
+
+
+
 control <- trainControl(method="cv", number=4, allowParallel=TRUE)
+
 
 #preproc <- preProcess(select(training,-(status)), method=c("center", "scale", "pca"), thresh = 0.8)
 preproc <- preProcess(select(training,-(status)), method="pca", thresh = 0.8)
@@ -272,14 +317,20 @@ set.seed(10)
 tic("glm")
 fit.glm <- train(status ~ ., data=training, method="glm", preProcess="pca", trControl = control)
 t_out <- toc()
-print(t_out)
+#print(t_out) # use this later when summarizing reults
 predict.glm <- predict(fit.glm, newdata=testing)
-#table(predict.glm, testing$status)
-
-
 confMat.glm <- confusionMatrix(predict.glm, testing$status)
-#confMat.glm$overall
 confMat.glm
+
+
+tic("glm without pca preprocessing")
+fit.glm <- train(status ~ ., data=training, method="glm", trControl = control)
+t_out <- toc()
+#print(t_out) # use this later when summarizing reults
+predict.glm <- predict(fit.glm, newdata=testing)
+confMat.glm <- confusionMatrix(predict.glm, testing$status)
+confMat.glm
+
 
 ```
 
@@ -289,28 +340,14 @@ confMat.glm
 
 ```{r glmnetpd, warning=FALSE}
 set.seed(10)
-library(glmnet)
+suppressMessages(library(glmnet))
 
-xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
-                           gamma = 0, 
-                           colsample_bytree = 1.0, 
-                           subsample = 1.0, 
-                           min_child_weight = 4)
 
-glmGrid <- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
-
-#modelList <- caretList(
-#    status ~ ., data=training, trControl=control,
-#    tuneList = list(
-#        xgbTree = caretModelSpec(method="xgbTree", tuneGrid = xgbTreeGrid, nthread=8),
-#        glmnet = caretModelSpec(method="glm", tuneGrid=glmGrid)
-#    )
-#)
 
 
 fit.glmnet <- train(status ~ ., data=training, method="glmnet", preProcess="pca", trControl = control)
+
 predict.glmnet <- predict(fit.glmnet, newdata=testing)
-#table(predict.glmnet, testing$status)
 
 
 confMat.glmnet <- confusionMatrix(predict.glmnet, testing$status)
@@ -324,6 +361,9 @@ confMat.glmnet
 
 
 ##### Neural Network
+
+Neural Net does not seem to work at all; predicts that everything is true.
+
 ```{r nnpd}
 library(nnet)
 tic("nnet")
@@ -331,12 +371,12 @@ fit.nnet <- nnet(status ~ ., data=training, size=4, decay=0.0001, maxit=500, tra
 toc()
 #summary(fit.nnet)
 predict.nnet <- predict(fit.nnet, newdata=testing, type="class")
-#table(predict.nnet, testing$status)
+table(predict.nnet, testing$status)
 
-confMat.nnet <- confusionMatrix(predict.nnet, testing$status)
-confMat.nnet
+#confMat.nnet <- confusionMatrix(predict.nnet, testing$status)
+#confMat.nnet
 ```
-Looks like this is all showing negative outcomes
+Looks like this is all showing positive (**1**) outcomes
 
 
 
@@ -346,15 +386,15 @@ This is a good model to determine linear seperability
 
 classification for multiple class is supported by a one-vs-all method.
 ```{r svmpd}
-library(kernlab)
+suppressMessages(library(kernlab))
 tic("svm")
 fit.ksvm <- ksvm(status ~ ., data=training)
 toc()
 #summary(fit.ksvm)
 predict.ksvm <- predict(fit.ksvm, newdata=testing, type="response")
 #table(predict.ksvm, testing$status)
-confMat.nnet <- confusionMatrix(predict.ksvm, testing$status)
-confMat.nnet
+confMat.ksvm <- confusionMatrix(predict.ksvm, testing$status)
+confMat.ksvm
 ```
 
 
@@ -495,13 +535,11 @@ maximize the distance between the classes
 tic("qda")
 fit.qda <- qda(status ~ ., data=training)
 toc()
-summary(fit.qda)
+#summary(fit.qda)
 predict.qda <- predict(fit.qda, newdata=testing)$class
-head(predict.qda)
-# got error here
-length(predict.qda)
-dim(testing)
-#table(predict.qda, testing$status)
+confMat.qda <- confusionMatrix(predict.qda, testing$status)
+confMat.qda
+
 ```
 
 
@@ -536,18 +574,69 @@ confMat.fda
 ```
 
 
+##### other
+this was up in the top, but never used
 
+Check out this
+[Kaggle LGB](https://www.kaggle.com/pranav84/talkingdata-eda-to-model-evaluation-lb-0-9683)
+
+LightGBM offers good accuracy when using native categorical features instead of one-hot coding. As per the official documentation dated [22nd March 2018](https://media.readthedocs.org/pdf/lightgbm/latest/lightgbm.pdf), LightGBM can find the optimal split of categorical features. Such an optimal split can provide the much better accuracy than one-hot coding solution.
+
+```{r miscstuff, eval=FALSE}
+xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
+                           gamma = 0, 
+                           colsample_bytree = 1.0, 
+                           subsample = 1.0, 
+                           min_child_weight = 4)
+
+glmGrid <- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
+
+#modelList <- caretList(
+#    status ~ ., data=training, trControl=control,
+#    tuneList = list(
+#        xgbTree = caretModelSpec(method="xgbTree", tuneGrid = xgbTreeGrid, nthread=8),
+#        glmnet = caretModelSpec(method="glm", tuneGrid=glmGrid)
+#    )
+#)
+```
 
 #### Model Evaluation
 This section should be a summary of the results above, there shouldn't be new calculations here
 
 
 ```{r resultspd}
-print(tic.log())
-names(tic.log())
 
-results <- resamples(list(rf=fit.rf, knn=fit.knn, glm=fit.glm))
+results <- resamples(list(glm=fit.glm, 
+                          knn=fit.knn, 
+#                          glmnet=fit.glmnet, 
+#                          nnet=fit.nnet, 
+#                          svm=fit.ksvm,
+#                          nb=fit.nb, 
+                          rpart=fit.rpart, 
+                          rf=fit.rf))
+#                          mda=fit.mda, 
+#                          qda=fit.qda, 
+#                          rda=fit.rda))
+
+
 summary(results)
+
+accuracy <- data.frame(
+    glm=confMat.glm$overall[1],
+    knn=confMat.knn$overall[1],
+    glmnet=confMat.glmnet$overall[1],
+    #nnet=confMat.nnet$overall[1],
+    ksvm=confMat.ksvm$overall[1],
+    nb=confMat.nb$overall[1],
+    rf=confMat.rf$overall[1],
+    mda=confMat.mda$overall[1],
+    qda=confMat.qda$overall[1],
+    rda=confMat.rda$overall[1]
+)
+accuracy
+
+
+
 ```
 
 
@@ -556,7 +645,8 @@ Move these predictions up above
 
 performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall, confMat.glm$overall), 3), ncol=3)
 colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors', 'GLM pca')
-rownames(performance) <- c('Accuracy', 'Kappa', 'AccuracyLower', 'AccuracyUpper', 'AccuracyNull', 'AccuracyPValue', 'McnemarPValue')
+#rownames(performance) <- c('Accuracy', 'Kappa', 'AccuracyLower', 'AccuracyUpper', 'AccuracyNull', 'AccuracyPValue', 'McnemarPValue')
+rownames(performance) <- rownames(confMat.rf$overall)
 print(as.table(performance))
 ```
 

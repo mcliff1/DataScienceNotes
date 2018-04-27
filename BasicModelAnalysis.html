@@ -126,12 +126,10 @@ $(document).ready(function () {
 
 <p>The purpose of this paper is to provide a summary of classification methods in R. Having a good understanding of how each method expects the data set to be conditioned and how they behave with respect to <em>normal</em> or <em>skewed</em> data is a key factor in model selection.</p>
 <p>Look forward to another composition for regression methods.</p>
-<div id="general-classification-overview" class="section level1">
-<h1>General Classification Overview</h1>
 <div id="classification-problem" class="section level2">
 <h2>Classification Problem</h2>
 <p>The general <strong>Classification</strong> (value) problem is defined as one where the observation (or outcome) variable is a discrete value. Some examples could be an outcome of <em>yes</em> or <em>no</em> or peforming character recognition on digits the outcome is one of 10 discrete values, <em>0</em> to <em>9</em>. The predictors or indepdenent variables can be either discrete or real valued (or vector valued), we are only considering the cases wiht a finite number of predictors (for non-finite we are in the theory of <em>Functional Analysis</em>)</p>
-<p>The goal is given a set of observations in the space <span class="math inline">\(\left( \mathbb{X}_1 \times \dots \times \mathbb{X}_n \right)\)</span> to come up with a candidate function <em>f</em> defined <span class="math inline">\(f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}\)</span> that <em>matches</em> our training data as best we can and the function can be used to predict the dependent variable for future observations.</p>
+<p>The goal is given a set of observations and corresponding predictors in the space <span class="math inline">\(\left( \mathbb{Y} \times \mathbb{X}_1 \times \dots \times \mathbb{X}_n \right)\)</span> to come up with a candidate function <em>f</em> defined <span class="math inline">\(f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}\)</span> that <em>best matches</em> our training data so that the function can be used to predict the outcome for future observations.</p>
 <p>Each of the <span class="math inline">\(\mathbb{X_j}\)</span> could be discrete or continuous, we will not have any practical restriction except that they <strong>MUST</strong> be valued, any missing data must be dealt with prior to using this package.</p>
 </div>
 <div id="models-to-consider" class="section level2">
@@ -140,12 +138,23 @@ $(document).ready(function () {
 <div id="linear-regression" class="section level3">
 <h3>Linear Regression</h3>
 <p>Linear Regression using <a href="https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html">lm</a></p>
-<p>Expects the input data to be linearly seperable</p>
+<p>Expects the input data to be linearly seperable, best way to visualize this is in two dimensions, lots of data points that are color coded red or blue and try to draw a line between them</p>
+<pre class="r"><code>x=runif(100, min=-2, max=2)
+y=runif(100, min=-2, max=2)
+c=ifelse( abs(y - 2*x) &gt; .2, ifelse(y&gt;2*x, &quot;red&quot;, &quot;blue&quot;), ifelse(rbinom(1,1,.5), &quot;red&quot;, &quot;blue&quot;))
+demo_df = data.frame(x=x, y=y, c=c)
+
+predict_df&lt;- data.frame(pred=predict(lm(y~x, data=demo_df), demo_df), 
+ggplot(data=demo_df, aes(x=x, y=y, col=c)) +
+    geom_point()</code></pre>
 </div>
 <div id="logistic-regression" class="section level3">
 <h3>Logistic Regression</h3>
 <p>Logistic Regression using <a href="http://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html">glm</a></p>
 <p>Expects the input data to be linearly seperable</p>
+<p>Solves to problem where all the spaces are fields (<span class="math inline">\(\mathbb{R}\)</span>), for classification problems they need to be converted to <strong>one-hot</strong> vectors, which can lead to a large <strong>sparse matrix</strong>.</p>
+<p>This translates to a problem finding the best function <span class="math inline">\(f:\mathbb{R}^N \to \mathbb{R}^M\)</span> where <em>M</em> is the number of discrete outcomes, <em>N</em> is the sum of all discrete values across all variables.</p>
+<p>We try to find <span class="math inline">\(f\)</span> in the form of <span class="math inline">\(f(x_1, x_2, \dots, x_n) = \beta_0 + \beta_1 x_1 + \beta_n x_n\)</span> in the standard sense, or could more generally be any combination that is linear in <span class="math inline">\(\beta\)</span>.</p>
 </div>
 <div id="regression-with-regularization" class="section level3">
 <h3>Regression with Regularization</h3>
@@ -153,6 +162,7 @@ $(document).ready(function () {
 </div>
 <div id="neural-netorks-nnet" class="section level3">
 <h3>Neural Netorks <a href="https://cran.r-project.org/web/packages/nnet/nnet.pdf">nnet</a></h3>
+<p>Works on real numbers, must one-hot the space</p>
 </div>
 <div id="support-vector-machines-svm-from-e1071" class="section level3">
 <h3>Support Vector Machines <a href="https://cran.r-project.org/web/packages/e1071/vignettes/svmdoc.pdf">svm</a> from <a href="https://cran.r-project.org/web/packages/e1071/e1071.pdf">e1071</a></h3>
@@ -172,6 +182,7 @@ $(document).ready(function () {
 <div id="ensembles-of-trees" class="section level3">
 <h3>Ensembles of trees</h3>
 <p>Ensembles of trees <a href="https://cran.r-project.org/web/packages/randomForest/randomForest.pdf">randomForest</a></p>
+<p>the normal <em>rf</em> method takes FOREVER.</p>
 </div>
 <div id="gradient-boosting" class="section level3">
 <h3>Gradient Boosting</h3>
@@ -201,7 +212,6 @@ $(document).ready(function () {
 <li>Somers-D Statistic</li>
 <li>Gini Coefficient</li>
 </ul>
-</div>
 </div>
 <div id="specific-examples" class="section level1">
 <h1>Specific Examples</h1>
@@ -238,6 +248,7 @@ nzv &lt;- nearZeroVar(data)</code></pre>
 <div id="specific-problems-to-model" class="section level2">
 <h2>Specific Problems to Model</h2>
 <pre class="r"><code>trainData &lt;- read.csv('https://raw.githubusercontent.com/selva86/datasets/master/breastcancer_training.csv')
+testData &lt;- read.csv('https://raw.githubusercontent.com/selva86/datasets/master/breastcancer_test.csv')
 head(trainData)</code></pre>
 <pre><code>##   Cl.thickness Cell.size Cell.shape Marg.adhesion Epith.c.size Bare.nuclei
 ## 1            1         1          1             1            2           1
@@ -253,6 +264,37 @@ head(trainData)</code></pre>
 ## 4           2               1       1     0
 ## 5           2               1       1     0
 ## 6           1               1       1     0</code></pre>
+<pre class="r"><code>str(trainData)</code></pre>
+<pre><code>## 'data.frame':    336 obs. of  10 variables:
+##  $ Cl.thickness   : int  1 5 4 2 1 1 5 5 1 4 ...
+##  $ Cell.size      : int  1 1 1 1 2 2 1 1 1 1 ...
+##  $ Cell.shape     : int  1 1 1 1 3 3 1 1 1 1 ...
+##  $ Marg.adhesion  : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ Epith.c.size   : int  2 1 2 2 2 2 2 2 2 2 ...
+##  $ Bare.nuclei    : int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ Bl.cromatin    : int  2 3 1 2 2 1 2 3 2 2 ...
+##  $ Normal.nucleoli: int  1 1 1 1 1 1 1 1 1 1 ...
+##  $ Mitoses        : int  1 1 1 1 1 1 1 2 1 1 ...
+##  $ Class          : int  0 0 0 0 0 0 0 0 0 0 ...</code></pre>
+<pre class="r"><code>str(testData)</code></pre>
+<pre><code>## 'data.frame':    204 obs. of  10 variables:
+##  $ Cl.thickness   : int  5 5 4 2 5 8 7 7 5 3 ...
+##  $ Cell.size      : int  1 4 1 1 3 7 4 3 1 1 ...
+##  $ Cell.shape     : int  1 4 1 2 3 5 6 2 1 1 ...
+##  $ Marg.adhesion  : int  1 5 3 1 3 10 4 10 1 1 ...
+##  $ Epith.c.size   : int  2 7 2 2 2 7 6 5 2 1 ...
+##  $ Bare.nuclei    : int  1 10 1 1 3 9 1 10 1 1 ...
+##  $ Bl.cromatin    : int  3 3 3 3 4 5 4 5 2 2 ...
+##  $ Normal.nucleoli: int  1 2 1 1 4 5 3 4 1 1 ...
+##  $ Mitoses        : int  1 1 1 1 1 4 1 4 1 1 ...
+##  $ Class          : int  0 0 0 0 1 1 1 1 0 0 ...</code></pre>
+<pre class="r"><code>logit.mod &lt;- glm(Class ~ Cl.thickness + Cell.size + Cell.shape, family=&quot;binomial&quot;, data=trainData)
+
+pred &lt;- predict(logit.mod, newdata=testData, type=&quot;response&quot;)
+y_pred &lt;- ifelse(pred &gt; 0.5, 1, 0)
+
+mean(y_pred == testData$Class)</code></pre>
+<pre><code>## [1] 0.9411765</code></pre>
 <div id="parkinsons-data" class="section level3">
 <h3>Parkinsons Data</h3>
 <p><a href="https://archive.ics.uci.edu/ml/datasets/Parkinsons">parkinsons</a> binary classifier with 23 predictors; 197 observations</p>
@@ -373,14 +415,13 @@ table(training$status)</code></pre>
 ##  34 103</code></pre>
 <pre class="r"><code>control &lt;- trainControl(method=&quot;cv&quot;, number=4, allowParallel=TRUE)
 
+
 #preproc &lt;- preProcess(select(training,-(status)), method=c(&quot;center&quot;, &quot;scale&quot;, &quot;pca&quot;), thresh = 0.8)
 preproc &lt;- preProcess(select(training,-(status)), method=&quot;pca&quot;, thresh = 0.8)
 
 # TODO - I couldn't load these earlier or we failed
-library(mda) #mda</code></pre>
-<pre><code>## Loading required package: class</code></pre>
-<pre><code>## Loaded mda 0.4-10</code></pre>
-<pre class="r"><code>library(MASS) #qda</code></pre>
+library(mda) #mda
+library(MASS) #qda</code></pre>
 <pre><code>## 
 ## Attaching package: 'MASS'</code></pre>
 <pre><code>## The following object is masked from 'package:dplyr':
@@ -418,24 +459,10 @@ table(predict.lm, testing$status)</code></pre>
 tic(&quot;glm&quot;)
 fit.glm &lt;- train(status ~ ., data=training, method=&quot;glm&quot;, preProcess=&quot;pca&quot;, trControl = control)
 t_out &lt;- toc()</code></pre>
-<pre><code>## glm: 0.86 sec elapsed</code></pre>
-<pre class="r"><code>print(t_out)</code></pre>
-<pre><code>## $tic
-## elapsed 
-##    3.14 
-## 
-## $toc
-## elapsed 
-##       4 
-## 
-## $msg
-## [1] &quot;glm&quot;</code></pre>
-<pre class="r"><code>predict.glm &lt;- predict(fit.glm, newdata=testing)
-#table(predict.glm, testing$status)
-
-
+<pre><code>## glm: 0.84 sec elapsed</code></pre>
+<pre class="r"><code>#print(t_out) # use this later when summarizing reults
+predict.glm &lt;- predict(fit.glm, newdata=testing)
 confMat.glm &lt;- confusionMatrix(predict.glm, testing$status)
-#confMat.glm$overall
 confMat.glm</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
@@ -463,34 +490,61 @@ confMat.glm</code></pre>
 ##                                           
 ##        'Positive' Class : 0               
 ## </code></pre>
+<pre class="r"><code>tic(&quot;glm without pca preprocessing&quot;)
+fit.glm &lt;- train(status ~ ., data=training, method=&quot;glm&quot;, trControl = control)</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre><code>## Warning: glm.fit: algorithm did not converge</code></pre>
+<pre><code>## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred
+
+## Warning: glm.fit: fitted probabilities numerically 0 or 1 occurred</code></pre>
+<pre class="r"><code>t_out &lt;- toc()</code></pre>
+<pre><code>## glm without pca preprocessing: 0.72 sec elapsed</code></pre>
+<pre class="r"><code>#print(t_out) # use this later when summarizing reults
+predict.glm &lt;- predict(fit.glm, newdata=testing)
+confMat.glm &lt;- confusionMatrix(predict.glm, testing$status)
+confMat.glm</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction  0  1
+##          0  9  7
+##          1  5 37
+##                                           
+##                Accuracy : 0.7931          
+##                  95% CI : (0.6665, 0.8883)
+##     No Information Rate : 0.7586          
+##     P-Value [Acc &gt; NIR] : 0.3305          
+##                                           
+##                   Kappa : 0.4613          
+##  Mcnemar's Test P-Value : 0.7728          
+##                                           
+##             Sensitivity : 0.6429          
+##             Specificity : 0.8409          
+##          Pos Pred Value : 0.5625          
+##          Neg Pred Value : 0.8810          
+##              Prevalence : 0.2414          
+##          Detection Rate : 0.1552          
+##    Detection Prevalence : 0.2759          
+##       Balanced Accuracy : 0.7419          
+##                                           
+##        'Positive' Class : 0               
+## </code></pre>
 </div>
 <div id="regression-with-regularization-1" class="section level5">
 <h5>Regression with Regularization</h5>
 <pre class="r"><code>set.seed(10)
-library(glmnet)</code></pre>
-<pre><code>## Loading required package: Matrix</code></pre>
-<pre><code>## Loading required package: foreach</code></pre>
-<pre><code>## Loaded glmnet 2.0-16</code></pre>
-<pre class="r"><code>xgbTreeGrid &lt;- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
-                           gamma = 0, 
-                           colsample_bytree = 1.0, 
-                           subsample = 1.0, 
-                           min_child_weight = 4)
+suppressMessages(library(glmnet))
 
-glmGrid &lt;- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
 
-#modelList &lt;- caretList(
-#    status ~ ., data=training, trControl=control,
-#    tuneList = list(
-#        xgbTree = caretModelSpec(method=&quot;xgbTree&quot;, tuneGrid = xgbTreeGrid, nthread=8),
-#        glmnet = caretModelSpec(method=&quot;glm&quot;, tuneGrid=glmGrid)
-#    )
-#)
 
 
 fit.glmnet &lt;- train(status ~ ., data=training, method=&quot;glmnet&quot;, preProcess=&quot;pca&quot;, trControl = control)
+
 predict.glmnet &lt;- predict(fit.glmnet, newdata=testing)
-#table(predict.glmnet, testing$status)
 
 
 confMat.glmnet &lt;- confusionMatrix(predict.glmnet, testing$status)
@@ -526,68 +580,37 @@ names(confMat.glmnet)</code></pre>
 </div>
 <div id="neural-network" class="section level5">
 <h5>Neural Network</h5>
+<p>Neural Net does not seem to work at all; predicts that everything is true.</p>
 <pre class="r"><code>library(nnet)
 tic(&quot;nnet&quot;)
 fit.nnet &lt;- nnet(status ~ ., data=training, size=4, decay=0.0001, maxit=500, trace=FALSE)
 toc()</code></pre>
-<pre><code>## nnet: 0.02 sec elapsed</code></pre>
+<pre><code>## nnet: 0.01 sec elapsed</code></pre>
 <pre class="r"><code>#summary(fit.nnet)
 predict.nnet &lt;- predict(fit.nnet, newdata=testing, type=&quot;class&quot;)
-#table(predict.nnet, testing$status)
-
-confMat.nnet &lt;- confusionMatrix(predict.nnet, testing$status)</code></pre>
-<pre><code>## Warning in confusionMatrix.default(predict.nnet, testing$status): Levels
-## are not in the same order for reference and data. Refactoring data to
-## match.</code></pre>
-<pre class="r"><code>confMat.nnet</code></pre>
-<pre><code>## Confusion Matrix and Statistics
-## 
-##           Reference
-## Prediction  0  1
-##          0  0  0
-##          1 14 44
-##                                           
-##                Accuracy : 0.7586          
-##                  95% CI : (0.6283, 0.8613)
-##     No Information Rate : 0.7586          
-##     P-Value [Acc &gt; NIR] : 0.571112        
-##                                           
-##                   Kappa : 0               
-##  Mcnemar's Test P-Value : 0.000512        
-##                                           
-##             Sensitivity : 0.0000          
-##             Specificity : 1.0000          
-##          Pos Pred Value :    NaN          
-##          Neg Pred Value : 0.7586          
-##              Prevalence : 0.2414          
-##          Detection Rate : 0.0000          
-##    Detection Prevalence : 0.0000          
-##       Balanced Accuracy : 0.5000          
-##                                           
-##        'Positive' Class : 0               
-## </code></pre>
-<p>Looks like this is all showing negative outcomes</p>
+table(predict.nnet, testing$status)</code></pre>
+<pre><code>##             
+## predict.nnet  0  1
+##            1 14 44</code></pre>
+<pre class="r"><code>#confMat.nnet &lt;- confusionMatrix(predict.nnet, testing$status)
+#confMat.nnet</code></pre>
+<p>Looks like this is all showing positive (<strong>1</strong>) outcomes</p>
 </div>
 <div id="support-vector-machine" class="section level5">
 <h5>Support Vector Machine</h5>
 <p>This is a good model to determine linear seperability</p>
 <p>classification for multiple class is supported by a one-vs-all method.</p>
-<pre class="r"><code>library(kernlab)</code></pre>
+<pre class="r"><code>suppressMessages(library(kernlab))</code></pre>
 <pre><code>## Warning: package 'kernlab' was built under R version 3.4.1</code></pre>
-<pre><code>## 
-## Attaching package: 'kernlab'</code></pre>
-<pre><code>## The following object is masked from 'package:ggplot2':
-## 
-##     alpha</code></pre>
 <pre class="r"><code>tic(&quot;svm&quot;)
 fit.ksvm &lt;- ksvm(status ~ ., data=training)
 toc()</code></pre>
-<pre><code>## svm: 0.01 sec elapsed</code></pre>
+<pre><code>## svm: 0 sec elapsed</code></pre>
 <pre class="r"><code>#summary(fit.ksvm)
 predict.ksvm &lt;- predict(fit.ksvm, newdata=testing, type=&quot;response&quot;)
 #table(predict.ksvm, testing$status)
-confMat.nnet &lt;- confusionMatrix(predict.ksvm, testing$status)
-confMat.nnet</code></pre>
+confMat.ksvm &lt;- confusionMatrix(predict.ksvm, testing$status)
+confMat.ksvm</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
@@ -620,7 +643,7 @@ confMat.nnet</code></pre>
 <pre class="r"><code>tic(&quot;nb&quot;)
 fit.nb &lt;- naiveBayes(status ~ ., data=training)
 toc()</code></pre>
-<pre><code>## nb: 0.01 sec elapsed</code></pre>
+<pre><code>## nb: 0 sec elapsed</code></pre>
 <pre class="r"><code>#summary(fit.nb)
 predict.nb &lt;- predict(fit.nb, newdata=testing)
 #table(predict.nb, testing$status)
@@ -747,7 +770,7 @@ confMat.rpart</code></pre>
 tic(&quot;rf&quot;)
 fit.rf &lt;- train(status ~ ., data=training, method=&quot;rf&quot;, trControl=control)
 toc()</code></pre>
-<pre><code>## rf: 0.96 sec elapsed</code></pre>
+<pre><code>## rf: 0.97 sec elapsed</code></pre>
 <pre class="r"><code>#summary(fit.rf)
 predict.rf &lt;- predict(fit.rf, newdata=testing)
 #table(predict.rf, testing$status)
@@ -859,29 +882,37 @@ confMat.mda</code></pre>
 <pre class="r"><code>tic(&quot;qda&quot;)
 fit.qda &lt;- qda(status ~ ., data=training)
 toc()</code></pre>
-<pre><code>## qda: 0 sec elapsed</code></pre>
-<pre class="r"><code>summary(fit.qda)</code></pre>
-<pre><code>##         Length Class  Mode     
-## prior     2    -none- numeric  
-## counts    2    -none- numeric  
-## means    44    -none- numeric  
-## scaling 968    -none- numeric  
-## ldet      2    -none- numeric  
-## lev       2    -none- character
-## N         1    -none- numeric  
-## call      3    -none- call     
-## terms     3    terms  call     
-## xlevels   0    -none- list</code></pre>
-<pre class="r"><code>predict.qda &lt;- predict(fit.qda, newdata=testing)$class
-head(predict.qda)</code></pre>
-<pre><code>## [1] 1 1 1 1 1 1
-## Levels: 0 1</code></pre>
-<pre class="r"><code># got error here
-length(predict.qda)</code></pre>
-<pre><code>## [1] 58</code></pre>
-<pre class="r"><code>dim(testing)</code></pre>
-<pre><code>## [1] 58 23</code></pre>
-<pre class="r"><code>#table(predict.qda, testing$status)</code></pre>
+<pre><code>## qda: 0.01 sec elapsed</code></pre>
+<pre class="r"><code>#summary(fit.qda)
+predict.qda &lt;- predict(fit.qda, newdata=testing)$class
+confMat.qda &lt;- confusionMatrix(predict.qda, testing$status)
+confMat.qda</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction  0  1
+##          0  7  1
+##          1  7 43
+##                                           
+##                Accuracy : 0.8621          
+##                  95% CI : (0.7462, 0.9385)
+##     No Information Rate : 0.7586          
+##     P-Value [Acc &gt; NIR] : 0.03995         
+##                                           
+##                   Kappa : 0.5589          
+##  Mcnemar's Test P-Value : 0.07710         
+##                                           
+##             Sensitivity : 0.5000          
+##             Specificity : 0.9773          
+##          Pos Pred Value : 0.8750          
+##          Neg Pred Value : 0.8600          
+##              Prevalence : 0.2414          
+##          Detection Rate : 0.1207          
+##    Detection Prevalence : 0.1379          
+##       Balanced Accuracy : 0.7386          
+##                                           
+##        'Positive' Class : 0               
+## </code></pre>
 </div>
 <div id="regularized-discriminant-analysis" class="section level5">
 <h5>Regularized Discriminant Analysis</h5>
@@ -890,7 +921,7 @@ length(predict.qda)</code></pre>
 <pre class="r"><code>tic(&quot;rda&quot;)
 fit.rda &lt;- rda(status ~ ., data=training, gamma=0.05, lambda=0.01)
 toc()</code></pre>
-<pre><code>## rda: 0.02 sec elapsed</code></pre>
+<pre><code>## rda: 0.03 sec elapsed</code></pre>
 <pre class="r"><code>#summary(fit.rda)
 predict.rda &lt;- predict(fit.rda, newdata=testing)$class
 head(predict.rda)</code></pre>
@@ -939,47 +970,96 @@ table(predict.fda, testing$status)
 confMat.fda &lt;- confusionMatrix(predict.fda, testing$status)
 confMat.fda</code></pre>
 </div>
+<div id="other" class="section level5">
+<h5>other</h5>
+<p>this was up in the top, but never used</p>
+<p>Check out this <a href="https://www.kaggle.com/pranav84/talkingdata-eda-to-model-evaluation-lb-0-9683">Kaggle LGB</a></p>
+<p>LightGBM offers good accuracy when using native categorical features instead of one-hot coding. As per the official documentation dated <a href="https://media.readthedocs.org/pdf/lightgbm/latest/lightgbm.pdf">22nd March 2018</a>, LightGBM can find the optimal split of categorical features. Such an optimal split can provide the much better accuracy than one-hot coding solution.</p>
+<pre class="r"><code>xgbTreeGrid &lt;- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
+                           gamma = 0, 
+                           colsample_bytree = 1.0, 
+                           subsample = 1.0, 
+                           min_child_weight = 4)
+
+glmGrid &lt;- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
+
+#modelList &lt;- caretList(
+#    status ~ ., data=training, trControl=control,
+#    tuneList = list(
+#        xgbTree = caretModelSpec(method=&quot;xgbTree&quot;, tuneGrid = xgbTreeGrid, nthread=8),
+#        glmnet = caretModelSpec(method=&quot;glm&quot;, tuneGrid=glmGrid)
+#    )
+#)</code></pre>
+</div>
 </div>
 <div id="model-evaluation-1" class="section level4">
 <h4>Model Evaluation</h4>
 <p>This section should be a summary of the results above, there shouldn’t be new calculations here</p>
-<pre class="r"><code>print(tic.log())</code></pre>
-<pre><code>## list()</code></pre>
-<pre class="r"><code>names(tic.log())</code></pre>
-<pre><code>## NULL</code></pre>
-<pre class="r"><code>results &lt;- resamples(list(rf=fit.rf, knn=fit.knn, glm=fit.glm))
+<pre class="r"><code>results &lt;- resamples(list(glm=fit.glm, 
+                          knn=fit.knn, 
+#                          glmnet=fit.glmnet, 
+#                          nnet=fit.nnet, 
+#                          svm=fit.ksvm,
+#                          nb=fit.nb, 
+                          rpart=fit.rpart, 
+                          rf=fit.rf))
+#                          mda=fit.mda, 
+#                          qda=fit.qda, 
+#                          rda=fit.rda))
+
+
 summary(results)</code></pre>
 <pre><code>## 
 ## Call:
 ## summary.resamples(object = results)
 ## 
-## Models: rf, knn, glm 
+## Models: glm, knn, rpart, rf 
 ## Number of resamples: 4 
 ## 
 ## Accuracy 
-##          Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
-## rf  0.8285714 0.8909664 0.9117647 0.8909664 0.9117647 0.9117647    0
-## knn 0.7647059 0.7820856 0.8082251 0.8095747 0.8357143 0.8571429    0
-## glm 0.7428571 0.8033613 0.8382353 0.8254202 0.8602941 0.8823529    0
+##            Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+## glm   0.7352941 0.7573529 0.7794118 0.7806723 0.8027311 0.8285714    0
+## knn   0.7647059 0.7820856 0.8082251 0.8095747 0.8357143 0.8571429    0
+## rpart 0.7142857 0.7741597 0.8088235 0.7962185 0.8308824 0.8529412    0
+## rf    0.8285714 0.8909664 0.9117647 0.8909664 0.9117647 0.9117647    0
 ## 
 ## Kappa 
-##          Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
-## rf  0.4750000 0.6574240 0.7309753 0.6754819 0.7490332 0.7649770    0
-## knn 0.1168831 0.3637532 0.4605216 0.3952518 0.4920202 0.5430809    0
-## glm 0.2446043 0.3663836 0.5210849 0.4964723 0.6511736 0.6991150    0</code></pre>
+##            Min.   1st Qu.    Median      Mean   3rd Qu.      Max. NA's
+## glm   0.2311558 0.4184760 0.5015022 0.4463606 0.5293868 0.5512821    0
+## knn   0.1168831 0.3637532 0.4605216 0.3952518 0.4920202 0.5430809    0
+## rpart 0.1935484 0.3536197 0.4502969 0.4178141 0.5144914 0.5771144    0
+## rf    0.4750000 0.6574240 0.7309753 0.6754819 0.7490332 0.7649770    0</code></pre>
+<pre class="r"><code>accuracy &lt;- data.frame(
+    glm=confMat.glm$overall[1],
+    knn=confMat.knn$overall[1],
+    glmnet=confMat.glmnet$overall[1],
+    #nnet=confMat.nnet$overall[1],
+    ksvm=confMat.ksvm$overall[1],
+    nb=confMat.nb$overall[1],
+    rf=confMat.rf$overall[1],
+    mda=confMat.mda$overall[1],
+    qda=confMat.qda$overall[1],
+    rda=confMat.rda$overall[1]
+)
+accuracy</code></pre>
+<pre><code>##                glm       knn   glmnet      ksvm        nb        rf
+## Accuracy 0.7931034 0.8275862 0.862069 0.8965517 0.6896552 0.9137931
+##                mda      qda       rda
+## Accuracy 0.8275862 0.862069 0.7586207</code></pre>
 <p>Move these predictions up above</p>
 <pre class="r"><code>performance &lt;- matrix(round(c(confMat.rf$overall, confMat.knn$overall, confMat.glm$overall), 3), ncol=3)
 colnames(performance) &lt;- c('Random Forest', 'K-Nearest Neighbors', 'GLM pca')
-rownames(performance) &lt;- c('Accuracy', 'Kappa', 'AccuracyLower', 'AccuracyUpper', 'AccuracyNull', 'AccuracyPValue', 'McnemarPValue')
+#rownames(performance) &lt;- c('Accuracy', 'Kappa', 'AccuracyLower', 'AccuracyUpper', 'AccuracyNull', 'AccuracyPValue', 'McnemarPValue')
+rownames(performance) &lt;- rownames(confMat.rf$overall)
 print(as.table(performance))</code></pre>
-<pre><code>##                Random Forest K-Nearest Neighbors GLM pca
-## Accuracy               0.914               0.828   0.862
-## Kappa                  0.746               0.415   0.604
-## AccuracyLower          0.810               0.706   0.746
-## AccuracyUpper          0.971               0.914   0.939
-## AccuracyNull           0.759               0.759   0.759
-## AccuracyPValue         0.002               0.140   0.040
-## McnemarPValue          0.371               0.027   0.724</code></pre>
+<pre><code>##   Random Forest K-Nearest Neighbors GLM pca
+## A         0.914               0.828   0.793
+## B         0.746               0.415   0.461
+## C         0.810               0.706   0.666
+## D         0.971               0.914   0.888
+## E         0.759               0.759   0.759
+## F         0.002               0.140   0.331
+## G         0.371               0.027   0.773</code></pre>
 <p>Lastly try using caretEnsamble</p>
 </div>
 </div>
