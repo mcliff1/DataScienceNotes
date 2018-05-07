@@ -5,7 +5,7 @@ set.seed(1)
 options(scipen = 9999, warn = -1, digits= 4)
 
 
-output_filename <- "lgb_45mm_sample.csv"
+output_filename <- "lgb_45mm_part1.csv"
 data_partition_num <- 0
 
 total_rows <- 184903890  # from prior data exploratio
@@ -16,7 +16,7 @@ testing_size <- 100000
 
 total_rows <- 184903890  # from prior data exploratio
 if (!debug) {
-  train_rows <- 4500000 #40000000
+  train_rows <- 45000000 #40000000
   skip_rows_train <- train_rows * data_partition_num   # total_rows - train_rows
   test_rows <- -1L
 } else {
@@ -221,3 +221,4 @@ sub$is_attributed <- round(sub$is_attributed, 4)
 #fwrite(sub, "lgb_submission.csv")
 fwrite(sub,  output_filename)
 head(sub, 10)
+
