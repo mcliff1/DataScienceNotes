@@ -7,13 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-require(caret)
-require(caretEnsemble)
-require(dplyr)
-require(tictoc)
-library(e1071) #naiveBayes
-library(mda) #mda
-#library(MASS) #qda
+if (!require("pacman")) install.packages("pacman") 
+pacman::p_load(knitr, caret, caretEnsemble, dplyr, tictoc, e1071, mda)
 
 ```
 
@@ -41,27 +36,25 @@ Linear Regression using [lm](https://stat.ethz.ch/R-manual/R-devel/library/stats
 
 Expects the input data to be linearly seperable, best way to visualize this is in two dimensions, lots of data points that are color coded red or blue and try to draw a line between them
 
-```{r demolr, eval=FALSE}
-x=runif(100, min=-2, max=2)
-y=runif(100, min=-2, max=2)
-c=ifelse( abs(y - 2*x) > .2, ifelse(y>2*x, "red", "blue"), ifelse(rbinom(1,1,.5), "red", "blue"))
-demo_df = data.frame(x=x, y=y, c=c)
+```{r demolr}
+num_points <- 400; noise_points = round(num_points/6)
+x <- runif(num_points, min=-2, max=2)
+y <- runif(num_points, min=-2, max=2)
+c <- ifelse(y>x, "A", "B")
+x2 <- runif(noise_points, min=-1.6, max=1.6)
+y2 <- x2 + rnorm(noise_points, mean=0, sd=0.3)
+c2 <- sample(c("A","B"), noise_points, replace=TRUE)
 
-predict_df<- data.frame(pred=predict(lm(y~x, data=demo_df), demo_df), 
-ggplot(data=demo_df, aes(x=x, y=y, col=c)) +
-    geom_point()
+#predict_df <- data.frame(pred=predict(lm(y~x, data=demo_df), demo_df), 
+ggplot(data=data.frame(x=append(x,x2),y=append(y,y2),c=append(c,c2)), aes(x=x, y=y, col=c)) +
+    geom_point(size=2) + geom_abline(slope = 1)
+
+
+
+
 ```
 
-
-
-
-### Logistic Regression 
-
-Logistic Regression using [glm](http://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html)
-
-Expects the input data to be linearly seperable
-
-Solves to problem where all the spaces are fields ($\mathbb{R}$), for classification problems they need to be converted to **one-hot** vectors, which can lead to a large **sparse matrix**. 
+Solves to problem where all the spaces are fields ($\mathbb{R}$), which can lead to a large **sparse matrix**. 
 
 This translates to a problem finding the best function $f:\mathbb{R}^N \to \mathbb{R}^M$ where *M* is the number of discrete outcomes, *N* is the sum of all discrete values across all variables.
 
@@ -70,16 +63,39 @@ $f(x_1, x_2, \dots, x_n) = \beta_0 + \beta_1 x_1 + \beta_n x_n$
 in the standard sense, or could more generally be any combination that is linear in $\beta$.
 
 
-### Regression with Regularization
-Regression with Regularization [glmnet](https://cran.r-project.org/web/packages/glmnet/glmnet.pdf)
+
+### Generalized Linear Models 
+
+Logistic Regression using [glm](http://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html)
+
+
+Expects the input data to be linearly seperable
+
+
+### Linear Regression with Regularization
+Lasso and Elastic-Net Regularized Generalized Linear Models
+
+[glmnet](https://cran.r-project.org/web/packages/glmnet/glmnet.pdf)
+[Article](https://www.jstatsoft.org/index.php/jss/article/view/v033i01/v33i01.pdf)
+
 
 
 ### Neural Netorks [nnet](https://cran.r-project.org/web/packages/nnet/nnet.pdf)
+
+Feed-Forward Neural Network and Multinomial Log-Linear methods
+Single Hidden Layer. Neural Network Data is normalized Real numbers, classifications must be converted to one-hot vectors.
+
+nnet() key options
+* size - number of units in hidden layer
+* na.action - default is to fail; alternative is na.omit and will reject
 
 Works on real numbers, must one-hot the space
 
 
 ### Support Vector Machines [svm](https://cran.r-project.org/web/packages/e1071/vignettes/svmdoc.pdf) from [e1071](https://cran.r-project.org/web/packages/e1071/e1071.pdf)
+
+
+
 
 ### Naive Bayes 
 Naive Bayes [naiveBayes](http://ugrad.stat.ubc.ca/R/library/e1071/html/naiveBayes.html) from [e1071](https://cran.r-project.org/web/packages/e1071/e1071.pdf)
@@ -101,14 +117,55 @@ Ensembles of trees [randomForest](https://cran.r-project.org/web/packages/random
 the normal *rf* method takes FOREVER.
 
 
-### Gradient Boosting
-Gradient Boosting [gbm](https://cran.r-project.org/web/packages/gbm/gbm.pdf)
+### Generalized Boosting
+Generalized Boosting [gbm](https://cran.r-project.org/web/packages/gbm/gbm.pdf)
+
+implements Fruend and Schapire's AdaBoost algoritm wand [Friedman's gradient boosting machine](https://github.com/gbm-developers/gbm)
+
+[GitHub](https://github.com/gbm-developers/gbm) 
+
+
+### Light Gradient Boosting Machine
+
+[LightGBM](https://github.com/Microsoft/LightGBM/blob/master/docs/README.rst) is a gradient boosting framework that uses tree based learning algorithms
+Used in the Ad Tracking Kaggle Challenge;  good when you have LOTS of factors (discrete values) in your predictors. Can deal with sparse matrix
+
+[R-GitHub](https://github.com/Microsoft/LightGBM/blob/master/README.md)
+
+Added to caret package in early 2017.
+[LightGBM Slack Team](https://github.com/Microsoft/LightGBM/tree/master/R-package)
+
+[LGB Docs](https://lightgbm.readthedocs.io/en/latest/)
+
+
+Parameter tunning from Kaggle Ad Tracking (notes from LGB Docs) challenge - 
+from _lgb.train_
+* nrounds
+* early_stopping_rounds
+* eval_freq
+
+From _params_
+* objective - binary   (alias for application, some other values regression, poisson, multiclass)
+* metric - auc
+* learning rate - 0.1 (default is 0.1)
+* num_leaves = 7  (default 31)
+
+
+
 
 
 ### others to consider
 * linear or quadratic discriminant analysis
 * CART (classification and regression trees)
 * Bagging
+
+## Caret
+```{r eval=FALSE}
+install.packages("caret", dependencies = c("Depends", "Suggests"))
+```
+
+How to [caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
+
 
 ## Evaluation Metrics for Classificaiton
 

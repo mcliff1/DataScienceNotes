@@ -1,0 +1,17 @@
+---
+title: "Text Processing"
+author: "Matt Cliff"
+date: "May 10, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Demo
+
+This is going to be a demonstration to pull blocks of texts (political speeches) from various parties, then given a new block of text to identify if which poltical party it most associates with.
+
+(Idea from a presentation given by Carlos Bossy who did this with state of the union addresses from two presidents.)
+
