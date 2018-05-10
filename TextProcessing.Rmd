@@ -15,3 +15,20 @@ This is going to be a demonstration to pull blocks of texts (political speeches)
 
 (Idea from a presentation given by Carlos Bossy who did this with state of the union addresses from two presidents.)
 
+### Data
+
+Where to get the data?
+best case, some nested folder structure based on political party
+what kind of meta data about the text
+
+### Model
+Use TF_IDF *Term Frequency - Inverse Document Frequency* to score the words,  then we will have set of matrixes for each category, we build our model to classify on the matrix of input text
+
+### Results
+
+Goals would be to able to do this in different countries (start with England, Australia, Canada)
+
+How does this change over time?  If I train with text from now, to compare with 30 years ago?
+
+What about twitter? Train with twitter, how does speeches match?
+Can we match to a person?
