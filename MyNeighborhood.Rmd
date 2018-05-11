@@ -7,13 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
-require(dplyr)
-require(ggplot2)
-require(leaflet)
-require(tibble)
-require(tidyr)
-require(htmltools)
-
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(dplyr, ggplot2, leaflet, tibble, tidyr, htmltools)
 ```
 
 ## Neighborhood Charts
