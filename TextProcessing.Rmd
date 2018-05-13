@@ -7,6 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+if (!require(pacman)) install.packages('pacman')
+pacman::p_load(sotu, ggplot2, tidytext, tidyverse, plyr, dplyr)
 ```
 
 ## Demo
@@ -33,8 +35,7 @@ Possible places to soure
 Using the *sotu* package the **sotu_meta** dataset is a dataframe with meta data of the 236 speeches, and sotu_text is a character vector with one address per element
 
 ```{r loaddata}
-if (!require(pacman)) install.packages('pacman')
-pacman::p_load(sotu, ggplot2, tidytext, tidyverse)
+
 
 str(sotu_meta)
 head(sotu_meta$year)
@@ -72,13 +73,13 @@ str(tokens)
 head(tokens)
 head(tokens %>% inner_join(get_sentiments("bing")))
 
-getsentiment <- function(data) {
+getsentiment <- function(textdata) {
     #print(class(data))
     #print(str(data))
-    sentiment <- data %>%
+    sentiment <- data.frame(text=textdata, stringsAsFactors = FALSE) %>%
         unnest_tokens(word, text) %>%
         inner_join(get_sentiments("bing")) %>%
-        count(sentiment) %>%  # count the number of positive and negatives
+        dplyr::count(sentiment) %>%  # count the number of positive and negatives
         spread(sentiment, n, fill=0)  %>%  # made data wider rather than narrow
         mutate(sentiment = positive - negative)
 
@@ -93,10 +94,18 @@ getsentiment <- function(data) {
 #        mutate(sotu_type = data$sotu_type) %>%
 
 
-sentiments <- getsentiment(df)
+df <- ldply(lapply(sotu_text, getsentiment), data.frame)
+
+head(df)
+head(cbind(sotu_meta, df))
+a <- cbind(sotu_meta, df)
+str(a)
+class(a)
+
+#sentiments <- getsentiment(df)
 
 
-ggplot(sentiments, aes(x = as.numeric(year), y = sentiment)) + 
+ggplot(a, aes(x = as.numeric(year), y = sentiment)) + 
   geom_point() + # add points to our plot, color-coded by president
   geom_smooth(method = "auto") # pick a method & fit a model
     
