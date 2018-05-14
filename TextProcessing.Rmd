@@ -270,8 +270,9 @@ names(predict.lsa)
 WordScores Text Model
 ```{r modelWordscores}
 
+ws_labels <- as.numeric(as.factor(model_labels))
 tic("use WordScores")
-model.wordscores <- textmodel_wordscores(model_dfm, model_labels, scale="logit")
+model.wordscores <- textmodel_wordscores(model_dfm, ws_labels)
 toc()
 summary(model.wordscores)
 
@@ -279,9 +280,8 @@ tic("predict")
 predict.wordscores <- predict(model.wordscores, querydfm)
 toc()
 summary(predict.wordscores)
-
-
-
+predict.wordscores
+as.numeric(as.factor(y_valid$party))
 ```
 
 
@@ -289,7 +289,9 @@ summary(predict.wordscores)
 Use TF_IDF *Term Frequency - Inverse Document Frequency* to score the words,  then we will have set of matrixes for each category, we build our model to classify on the matrix of input text
 
 
+```{r tidytextModel}
 
+```
 
 
 ### Results
