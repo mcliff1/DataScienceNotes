@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 if (!require(pacman)) install.packages('pacman')
-pacman::p_load(sotu, ggplot2, tidytext, tidyverse, plyr, dplyr)
+pacman::p_load(sotu, ggplot2, tidytext, tidyverse, plyr, dplyr, quanteda)
 ```
 
 ## Demo
@@ -29,6 +29,8 @@ Possible places to soure
 * [https://en.wikisource.org/wiki/Portal:State_of_the_Union_Speeches_by_United_States_Presidents]
 * [Data as Journalism](https://onlinejournalismblog.com/2018/02/05/text-as-data-journalism-sotu-speeches/)
 * [Kaggle](https://www.kaggle.com/rtatman/state-of-the-union-corpus-1989-2017)
+* [Kaggle Tokenization Tutorial](https://www.kaggle.com/rtatman/tokenization-tutorial/code)
+
 
 ### Data
 
@@ -62,7 +64,7 @@ what kind of meta data about the text
 Let's call on tidy text next
 ```{r tidy1}
 
-df <- mutate(sotu_meta, text=sotu_text)
+#df <- mutate(sotu_meta, text=sotu_text)
 str(sotu_text[236])
 sotu_meta[236,]
 
@@ -73,12 +75,12 @@ str(tokens)
 head(tokens)
 head(tokens %>% inner_join(get_sentiments("bing")))
 
-getsentiment <- function(textdata) {
+getsentiment <- function(textdata, lexicon="bing") {
     #print(class(data))
     #print(str(data))
     sentiment <- data.frame(text=textdata, stringsAsFactors = FALSE) %>%
         unnest_tokens(word, text) %>%
-        inner_join(get_sentiments("bing")) %>%
+        inner_join(get_sentiments(lexicon), by="word") %>%
         dplyr::count(sentiment) %>%  # count the number of positive and negatives
         spread(sentiment, n, fill=0)  %>%  # made data wider rather than narrow
         mutate(sentiment = positive - negative)
@@ -94,31 +96,112 @@ getsentiment <- function(textdata) {
 #        mutate(sotu_type = data$sotu_type) %>%
 
 
-df <- ldply(lapply(sotu_text, getsentiment), data.frame)
+
+
+
+sentiments <- ldply(lapply(sotu_text, getsentiment), data.frame)
 
 head(df)
 head(cbind(sotu_meta, df))
-a <- cbind(sotu_meta, df)
-str(a)
-class(a)
+df <- cbind(sotu_meta, sentiments) %>%
+    mutate(len = unlist(lapply(sotu_text, nchar))) %>%
+    mutate(wgt_sentiment = sentiment / len)
 
 #sentiments <- getsentiment(df)
 
 
-ggplot(a, aes(x = as.numeric(year), y = sentiment)) + 
-  geom_point() + # add points to our plot, color-coded by president
-  geom_smooth(method = "auto") # pick a method & fit a model
+ggplot(df, aes(x = as.numeric(year), y = sentiment)) + 
+  geom_point(aes(color=party)) + # add points to our plot, color-coded by party
+  geom_smooth(method = "auto") + # pick a method & fit a model
+    xlab('Number of Words in Text')
     
 
   #geom_point(aes(color = president)) + # add points to our plot, 
 
 ```
+Lets do a box plot by party
+```{r plot2}
+ggplot(df, aes(x=party, y=sentiment, color=party)) +
+    geom_boxplot() + coord_flip()
+
+# look at the last 20 years
+ggplot(tail(df,20), aes(x=party, y=sentiment, color=party)) +
+    geom_boxplot() + coord_flip() +
+    labs(title="Sentiment by party over 20 years)")
+
+
+```
+But how long are they?
+
+
+Try some weighted sentiments
+```{r plot3}
+ggplot(tail(df,24), aes(x=len, fill=party)) +
+     geom_density(alpha=0.5, aes(fill=factor(party))) +
+    labs(title="Length Density by Party (past 60y)")
+
+ggplot(tail(df,60), aes(x=len, fill=party)) +
+     geom_density(alpha=0.5, aes(fill=factor(party))) +
+    labs(title="Length Density by Party (past 60y)")
 
 
 
+ggplot(df, aes(x=party, y=wgt_sentiment, color=party)) +
+    geom_boxplot() + coord_flip() +
+    labs(title="Weighted Sentiment by party")
 
+# look at the last 20 years
+ggplot(tail(df,20), aes(x=party, y=wgt_sentiment, color=party)) +
+    geom_boxplot() + coord_flip() +
+    labs(title="Weighted Sentiment by party over 20 years")
+
+```
+
+
+Now let's try with a different lexicon *afinn* instead of *bing*
+
+```{r modelAfinn}
+
+
+getsentimentAfinn <- function(textdata, lexicon="afinn") {
+    sentimentAfinn <- data.frame(text=textdata, stringsAsFactors = FALSE) %>%
+        unnest_tokens(word, text) %>%
+        inner_join(get_sentiments(lexicon), by="word")
+
+    return(sum(sentimentAfinn$score))
+}
+
+sentiments2 <- ldply(lapply(sotu_text, getsentimentAfinn), data.frame)
+names(sentiments2) <- c('sentiment')
+```
+
+```{r breakp1}
+df2 <- cbind(sotu_meta, sentiments2) %>%
+    mutate(len = unlist(lapply(sotu_text, nchar))) %>%
+    mutate(wgt_sentiment = sentiment / len)
+
+
+ggplot(df2, aes(x=party, y=wgt_sentiment, color=party)) +
+    geom_boxplot() + coord_flip() +
+    labs(title="Weighted Sentiment (Afinn) by party")
+
+# look at the last 20 years
+ggplot(tail(df2,20), aes(x=party, y=wgt_sentiment, color=party)) +
+    geom_boxplot() + coord_flip() +
+    labs(title="Weighted Sentiment by (Afinn) party over 20 years")
+
+```
 
 ### Model
+
+List of packages ([comparision](https://docs.quanteda.io/articles/pkgdown/comparison.html))
+
+* [Quanteda](https://docs.quanteda.io/reference/index.html)
+* [tm]
+* [tidytext]
+* [corpus]
+* [koRpus]
+
 Use TF_IDF *Term Frequency - Inverse Document Frequency* to score the words,  then we will have set of matrixes for each category, we build our model to classify on the matrix of input text
 
 
