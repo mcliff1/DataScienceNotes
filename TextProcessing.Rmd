@@ -8,7 +8,7 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 if (!require(pacman)) install.packages('pacman')
-pacman::p_load(sotu, ggplot2, tidytext, tidyverse, plyr, dplyr, quanteda)
+pacman::p_load(tictoc, sotu, ggplot2, tidytext, tidyverse, plyr, dplyr, quanteda)
 ```
 
 ## Demo
@@ -201,6 +201,90 @@ List of packages ([comparision](https://docs.quanteda.io/articles/pkgdown/compar
 * [tidytext]
 * [corpus]
 * [koRpus]
+
+```{r quantedaDfm}
+tic("Generate DFM")
+n <- 60 #236
+samples <- sample(1:n, size=n*.8)
+
+X_train <- tail(sotu_text, n)[samples]
+y_train <- tail(sotu_meta,n)[samples,]
+X_valid <- tail(sotu_text, n)[-samples]
+y_valid <- tail(sotu_meta, n)[-samples,]
+
+model_dfm <- dfm(X_train)
+model_labels <- y_train$party
+toc()
+
+# predict on one of them
+y_valid$party
+
+
+tic("use Bernoulli Naive Bayes")
+model.nb <- textmodel_nb(model_dfm, model_labels)
+toc()
+
+
+tic("predict")
+querydfm <- dfm(X_valid) %>% dfm_select(pattern=model_dfm)
+predict(model.nb, querydfm)
+toc()
+
+
+```
+
+
+
+```{r modelAffinity}
+# use Affinity
+tic("use affinity")
+model.affinity <- textmodel_affinity(model_dfm, model_labels)
+
+# predict on one of them
+#querydfm <- dfm(X_valid[1]) %>% dfm_select(pattern=model_dfm)
+predict.affinity <- predict(model.affinity, querydfm)
+toc()
+
+names(predict.affinity)
+predict.affinity$newdata
+
+
+```
+
+
+Latent Semantic Analysis
+```{r modelLSA}
+model.lsa <- textmodel_lsa(model_dfm, nd=2)
+names(model.lsa)
+head(model.lsa$docs)
+
+querydfm <- dfm(X_valid) %>% dfm_select(pattern=model_dfm)
+predict.lsa <- predict(model.lsa, querydfm)
+predict.lsa$docs_newspace
+names(predict.lsa)
+
+
+```
+
+
+WordScores Text Model
+```{r modelWordscores}
+
+tic("use WordScores")
+model.wordscores <- textmodel_wordscores(model_dfm, model_labels, scale="logit")
+toc()
+summary(model.wordscores)
+
+tic("predict")
+predict.wordscores <- predict(model.wordscores, querydfm)
+toc()
+summary(predict.wordscores)
+
+
+
+```
+
+
 
 Use TF_IDF *Term Frequency - Inverse Document Frequency* to score the words,  then we will have set of matrixes for each category, we build our model to classify on the matrix of input text
 

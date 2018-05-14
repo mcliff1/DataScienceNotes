@@ -315,6 +315,166 @@ ggplot(tail(df2,20), aes(x=party, y=wgt_sentiment, color=party)) +
 <li>[corpus]</li>
 <li>[koRpus]</li>
 </ul>
+<pre class="r"><code>tic(&quot;Generate DFM&quot;)
+n &lt;- 60 #236
+samples &lt;- sample(1:n, size=n*.8)
+
+X_train &lt;- tail(sotu_text, n)[samples]
+y_train &lt;- tail(sotu_meta,n)[samples,]
+X_valid &lt;- tail(sotu_text, n)[-samples]
+y_valid &lt;- tail(sotu_meta, n)[-samples,]
+
+model_dfm &lt;- dfm(X_train)
+model_labels &lt;- y_train$party
+toc()</code></pre>
+<pre><code>## Generate DFM: 0.36 sec elapsed</code></pre>
+<pre class="r"><code># use Bernoulli Naive Bayes
+model.nb &lt;- textmodel_nb(model_dfm, model_labels)
+
+# predict on one of them
+tic(&quot;predict&quot;)
+querydfm &lt;- dfm(X_valid[1]) %&gt;% dfm_select(pattern=model_dfm)
+predict(model.nb, querydfm)</code></pre>
+<pre><code>## $log.posterior.lik
+##       Republican Democratic
+## text1  -121731.7  -121749.9
+## 
+## $posterior.prob
+##       Republican   Democratic
+## text1          1 1.312073e-08
+## 
+## $nb.predicted
+## [1] &quot;Republican&quot;
+## 
+## $Pc
+## Republican Democratic 
+##        0.5        0.5 
+## 
+## $classlabels
+## [1] &quot;Republican&quot; &quot;Democratic&quot;
+## 
+## $call
+## predict.textmodel_nb(object = model.nb, newdata = querydfm)</code></pre>
+<pre class="r"><code>y_valid[1]</code></pre>
+<pre><code>## # A tibble: 12 x 1
+##    president         
+##    &lt;chr&gt;             
+##  1 Richard M. Nixon  
+##  2 Jimmy Carter      
+##  3 Jimmy Carter      
+##  4 Ronald Reagan     
+##  5 Ronald Reagan     
+##  6 George Bush       
+##  7 George Bush       
+##  8 William J. Clinton
+##  9 George W. Bush    
+## 10 George W. Bush    
+## 11 Barack Obama      
+## 12 Barack Obama</code></pre>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>## predict: 0.44 sec elapsed</code></pre>
+<pre class="r"><code># predict on one of them
+tic(&quot;predict2&quot;)
+querydfm &lt;- dfm(X_valid[2:3]) %&gt;% dfm_select(pattern=model_dfm)
+predict(model.nb, querydfm)</code></pre>
+<pre><code>## $log.posterior.lik
+##       Republican Democratic
+## text1  -23669.32  -23521.14
+## text2 -238820.77 -234773.37
+## 
+## $posterior.prob
+##         Republican Democratic
+## text1 4.420068e-65          1
+## text2 0.000000e+00          1
+## 
+## $nb.predicted
+## [1] &quot;Democratic&quot; &quot;Democratic&quot;
+## 
+## $Pc
+## Republican Democratic 
+##        0.5        0.5 
+## 
+## $classlabels
+## [1] &quot;Republican&quot; &quot;Democratic&quot;
+## 
+## $call
+## predict.textmodel_nb(object = model.nb, newdata = querydfm)</code></pre>
+<pre class="r"><code>toc()</code></pre>
+<pre><code>## predict2: 0.27 sec elapsed</code></pre>
+<pre class="r"><code>y_valid[2:3]</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##     year years_active
+##    &lt;int&gt; &lt;chr&gt;       
+##  1  1972 1969-1973   
+##  2  1980 1977-1981   
+##  3  1980 1977-1981   
+##  4  1986 1985-1989   
+##  5  1988 1985-1989   
+##  6  1989 1989-1993   
+##  7  1991 1989-1993   
+##  8  1995 1993-1997   
+##  9  2002 2001-2005   
+## 10  2008 2005-2009   
+## 11  2012 2009-2013   
+## 12  2015 2013-2016</code></pre>
+<pre class="r"><code># use Affinity
+model.affinity &lt;- textmodel_affinity(model_dfm, model_labels)
+
+# predict on one of them
+querydfm &lt;- dfm(X_valid[1]) %&gt;% dfm_select(pattern=model_dfm)
+predict.affinity &lt;- predict(model.affinity, querydfm)
+names(predict.affinity)</code></pre>
+<pre><code>## [1] &quot;coefficients&quot; &quot;se&quot;           &quot;cov&quot;          &quot;smooth&quot;      
+## [5] &quot;newdata&quot;      &quot;train&quot;        &quot;level&quot;        &quot;p&quot;           
+## [9] &quot;support&quot;</code></pre>
+<pre class="r"><code>y_valid[1]</code></pre>
+<pre><code>## # A tibble: 12 x 1
+##    president         
+##    &lt;chr&gt;             
+##  1 Richard M. Nixon  
+##  2 Jimmy Carter      
+##  3 Jimmy Carter      
+##  4 Ronald Reagan     
+##  5 Ronald Reagan     
+##  6 George Bush       
+##  7 George Bush       
+##  8 William J. Clinton
+##  9 George W. Bush    
+## 10 George W. Bush    
+## 11 Barack Obama      
+## 12 Barack Obama</code></pre>
+<p>Latent Semantic Analysis</p>
+<pre class="r"><code>model.lsa &lt;- textmodel_lsa(model_dfm, nd=2)
+names(model.lsa)</code></pre>
+<pre><code>## [1] &quot;sk&quot;              &quot;docs&quot;            &quot;features&quot;        &quot;matrix_low_rank&quot;
+## [5] &quot;data&quot;</code></pre>
+<pre class="r"><code>head(model.lsa$docs)</code></pre>
+<pre><code>##              [,1]       [,2]
+## text1 -0.09060804 0.08959878
+## text2 -0.10278625 0.16309507
+## text3 -0.09689476 0.18438086
+## text4 -0.11670784 0.02486463
+## text5 -0.05349614 0.05780947
+## text6 -0.11444840 0.17448733</code></pre>
+<pre class="r"><code>querydfm &lt;- dfm(X_valid) %&gt;% dfm_select(pattern=model_dfm)
+predict.lsa &lt;- predict(model.lsa, querydfm)
+predict.lsa$docs_newspace</code></pre>
+<pre><code>## 12 x 2 Matrix of class &quot;dgeMatrix&quot;
+##               [,1]         [,2]
+## text1  -0.27242195  0.013028122
+## text2  -0.06061635  0.003831354
+## text3  -0.54470528 -0.335515458
+## text4  -0.05974019  0.069353452
+## text5  -0.08059550  0.074739295
+## text6  -0.08512600  0.096203649
+## text7  -0.07355216  0.072488668
+## text8  -0.15228574  0.222016422
+## text9  -0.06554689  0.084662015
+## text10 -0.09635788  0.098308928
+## text11 -0.10570871  0.186768518
+## text12 -0.10664184  0.227149955</code></pre>
+<pre class="r"><code>names(predict.lsa)</code></pre>
+<pre><code>## [1] &quot;docs_newspace&quot;   &quot;matrix_low_rank&quot;</code></pre>
 <p>Use TF_IDF <em>Term Frequency - Inverse Document Frequency</em> to score the words, then we will have set of matrixes for each category, we build our model to classify on the matrix of input text</p>
 </div>
 <div id="results" class="section level3">
