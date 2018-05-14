@@ -7,12 +7,8 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE, comment = NA)
-require(tidyverse)
-require(xlsx)
-require(dplyr)
-require(ggplot2)
-require(data.table)
-require(dplyr)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(tidyverse, xlsx, dplyr, ggplot2, data.table)
 ```
 
 
@@ -189,6 +185,7 @@ BioMedical Engineering OnLine 2007, 6:23 (26 June 2007)
 ## Save Formatted Data
 Finally Save the datasets
 ```{r writeData}
+Sys.time()
 save(ccData, file="./data/ccData.RData")
 save(pdData, file="./data/pdData.RData")
 
