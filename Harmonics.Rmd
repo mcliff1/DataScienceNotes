@@ -1,0 +1,60 @@
+---
+title: "Harmonics"
+author: "Matt Cliff"
+date: "May 17, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+if (!require(pacman)) install.packages("pacman")
+pacman::p_load(caret)
+
+```
+
+## Modeling freuqency information from data
+
+Inspired by the May 2018 internet sensation of "Laurel vs Yanny"
+
+Pulling notes from Coursera - Regression Models week 4.
+
+Start by building some notes
+
+```{r setupNotes}
+
+# harmonics using linear models
+# white keys on pianco from octave c4 - c5
+notes4 <- c(261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25)
+t <- seq(0, 2, by = .001); n <- length(t)
+c4 <- sin(2 * pi * notes4[1] * t)
+e4 <- sin(2 * pi * notes4[3] * t)
+g4 <- sin(2 * pi * notes4[5] * t)
+chord <- c4 + e4 + g4 + rnorm(n, 0, 0.3)
+```
+
+
+Now let's fit a linear model (do not force the origin)
+```{r modelNotes}
+# a matrix that is t x len(notes4) [2001x8]
+#   representing the wave over t = [0,2] 2 seconds
+x <- sapply(notes4, function(freq) sin(2*pi*freq*t))
+
+# try to fit the chord to the set of 8 keys
+fit <- lm(chord ~ x -1)
+
+# x is the basis of all the notes
+plot(fit$coef, type="l")
+m <- n/100
+plot(c4[1:m] + g4[1:m], type="l")
+```
+
+now try to plot a spectrum of this
+```{r chordSpectrum}
+a <- fft(chord)
+plot(Re(a)^2, type="l")
+plot(Re(a), type="l")
+summary(chord)
+str(chord)
+
+
+```
