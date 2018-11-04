@@ -19,6 +19,8 @@ then run numerous models to exhaustion to identify to best one or ones to tune.
 
 To begin with I will need to limit the problem domain based on regression or classification methods, although the underlying mechanics is almost always linear algebra the approaches to these problems can diverge significantly.
 
+(Neural Net Ref)[https://www.kaggle.com/jannesklaas/ai-bootcamp-5-multiclass-regression]
+
 In this case we will focus on the Parkison's dataset with 197 observations, and 23 predictors of a binary outcome.
 
 ### Classification Problem
