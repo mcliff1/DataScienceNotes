@@ -1,133 +1,651 @@
 ---
-title: "BasicModelAnalysis"
+title: "Classification Model Overview"
 author: "Matt Cliff"
-date: "January 29, 2018"
+date: "April 15, 2018"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-require(caret)
-require(caretEnsemble)
-require(dplyr)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(caret, caretEnsemble, tictoc, e1071, mda, dplyr, ggplot2, glmnet)
 ```
 
-## Basic Model Analysis
+The purpose of this paper is to provide a summary of classification methods in R. Having a good understanding of how each method expects the data set to be conditioned and how they behave with respect to *normal* or *skewed* data is a key factor in model selection.
 
-My goal is to set up a page that I can inject a dataset into
-then run numerous models to exhaustion to identify to best one or ones to tune.
+Look forward to another composition for regression methods.
 
-To begin with I will need to limit the problem domain based on regression or classification methods, although the underlying mechanics is almost always linear algebra the approaches to these problems can diverge significantly.
 
 (Neural Net Ref)[https://www.kaggle.com/jannesklaas/ai-bootcamp-5-multiclass-regression]
 
 In this case we will focus on the Parkison's dataset with 197 observations, and 23 predictors of a binary outcome.
 
-### Classification Problem
+## Classification Problem
 
-The Classification (value) problem is defined as one where a particular observation of $n$ predictors will have a single valued dependent (predicted) variable that is from a finite class.  The predictor or indepdenent variables can be either finite valued or real valued (or vector valued).
+The general **Classification** (value) problem is defined as one where the observation (or outcome) variable is a discrete value.  Some examples could be an outcome of *yes* or *no* or peforming character recognition on digits the outcome is one of 10 discrete values, *0* to *9*.  The predictors or indepdenent variables can be either discrete or real valued (or vector valued), we are only considering the cases wiht a finite number of predictors (for non-finite we are in the theory of *Functional Analysis*)
 
-Our goal is to come up with some model function $f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}$ that matches our data and we think can best be used to predict the dependent variable for future observations from the domain space.
+The goal is given a set of observations and corresponding predictors in the space $\left( \mathbb{Y} \times \mathbb{X}_1 \times \dots \times \mathbb{X}_n \right)$ to come up with a candidate function *f* defined $f: \mathbb{X}_1 \times \mathbb{X}_2\times \dots \times \mathbb{X}_n\mapsto \mathbb{Y}$ that _best matches_ our training data so that the function can be used to predict the outcome for future observations.
 
-Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practicle restriction except that they MUST be valued, any missing data must be dealt with prior to using this package.
+Each of the $\mathbb{X_j}$ could be discrete or continuous, we will not have any practical restriction except that they **MUST** be valued, any missing data must be dealt with prior to using this package.
 
-We want to find something with at least 10 features, and 5000 observations
-[UCI Datasets](https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table)
 
-* [Buzz in Social Media](https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+)
+## Models to consider
 
-* [Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records
+Do they 'retain' discrete attributes or convert them to real numbers?
 
-* [card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
+### Linear Regression
+Linear Regression using [lm](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/lm.html)
 
-* [parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 instances
+Expects the input data to be linearly seperable, best way to visualize this is in two dimensions, lots of data points that are color coded red or blue and try to draw a line between them
 
-```{r loaddata}
-load("data/ccData.RData")
-load("data/pdData.RData")
-#data("possum", package="DAAG")
+```{r demolr}
+num_points <- 400; noise_points = round(num_points/6)
+x <- runif(num_points, min=-2, max=2)
+y <- runif(num_points, min=-2, max=2)
+c <- ifelse(y>x, "A", "B")
+x2 <- runif(noise_points, min=-1.6, max=1.6)
+y2 <- x2 + rnorm(noise_points, mean=0, sd=0.3)
+c2 <- sample(c("A","B"), noise_points, replace=TRUE)
+
+#predict_df <- data.frame(pred=predict(lm(y~x, data=demo_df), demo_df),
+ggplot(data=data.frame(x=append(x,x2),y=append(y,y2),c=append(c,c2)), aes(x=x, y=y, col=c)) +
+    geom_point(size=2) + geom_abline(slope = 1)
+
+
+
 
 ```
 
+Solves to problem where all the spaces are fields ($\mathbb{R}$), which can lead to a large **sparse matrix**.
+
+This translates to a problem finding the best function $f:\mathbb{R}^N \to \mathbb{R}^M$ where *M* is the number of discrete outcomes, *N* is the sum of all discrete values across all variables.
+
+We try to  find $f$ in the form of
+$f(x_1, x_2, \dots, x_n) = \beta_0 + \beta_1 x_1 + \beta_n x_n$
+in the standard sense, or could more generally be any combination that is linear in $\beta$.
+
+
+
+### Generalized Linear Models
+
+Logistic Regression using [glm](http://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html)
+
+
+Expects the input data to be linearly seperable
+
+
+### Linear Regression with Regularization
+Lasso and Elastic-Net Regularized Generalized Linear Models
+
+[glmnet](https://cran.r-project.org/web/packages/glmnet/glmnet.pdf)
+[Article](https://www.jstatsoft.org/index.php/jss/article/view/v033i01/v33i01.pdf)
+
+
+
+### Neural Netorks [nnet](https://cran.r-project.org/web/packages/nnet/nnet.pdf)
+
+Feed-Forward Neural Network and Multinomial Log-Linear methods
+Single Hidden Layer. Neural Network Data is normalized Real numbers, classifications must be converted to one-hot vectors.
+
+nnet() key options
+* size - number of units in hidden layer
+* na.action - default is to fail; alternative is na.omit and will reject
+
+Works on real numbers, must one-hot the space
+
+
+### Support Vector Machines [svm](https://cran.r-project.org/web/packages/e1071/vignettes/svmdoc.pdf) from [e1071](https://cran.r-project.org/web/packages/e1071/e1071.pdf)
+
+
+
+
+### Naive Bayes
+Naive Bayes [naiveBayes](http://ugrad.stat.ubc.ca/R/library/e1071/html/naiveBayes.html) from [e1071](https://cran.r-project.org/web/packages/e1071/e1071.pdf)
+
+### K-Nearest Neighbor
+K-Nearest Neighbor [knn](http://stat.ethz.ch/R-manual/R-devel/library/class/html/knn.html)
+
+
+
+
+### Decision Tree
+Decision Tree [rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf)
+
+
+### Ensembles of trees
+Ensembles of trees [randomForest](https://cran.r-project.org/web/packages/randomForest/randomForest.pdf)
+
+
+the normal *rf* method takes FOREVER.
+
+
+### Generalized Boosting
+Generalized Boosting [gbm](https://cran.r-project.org/web/packages/gbm/gbm.pdf)
+
+implements Fruend and Schapire's AdaBoost algoritm wand [Friedman's gradient boosting machine](https://github.com/gbm-developers/gbm)
+
+[GitHub](https://github.com/gbm-developers/gbm)
+
+
+### Light Gradient Boosting Machine
+
+[LightGBM](https://github.com/Microsoft/LightGBM/blob/master/docs/README.rst) is a gradient boosting framework that uses tree based learning algorithms
+Used in the Ad Tracking Kaggle Challenge;  good when you have LOTS of factors (discrete values) in your predictors. Can deal with sparse matrix
+
+[R-GitHub](https://github.com/Microsoft/LightGBM/blob/master/README.md)
+
+Added to caret package in early 2017.
+[LightGBM Slack Team](https://github.com/Microsoft/LightGBM/tree/master/R-package)
+
+[LGB Docs](https://lightgbm.readthedocs.io/en/latest/)
+
+
+Parameter tunning from Kaggle Ad Tracking (notes from LGB Docs) challenge -
+from _lgb.train_
+* nrounds
+* early_stopping_rounds
+* eval_freq
+
+From _params_
+* objective - binary   (alias for application, some other values regression, poisson, multiclass)
+* metric - auc
+* learning rate - 0.1 (default is 0.1)
+* num_leaves = 7  (default 31)
+
+
+
+
+
+### others to consider
+* linear or quadratic discriminant analysis
+* CART (classification and regression trees)
+* Bagging
+
+## Caret
+```{r eval=FALSE}
+install.packages("caret", dependencies = c("Depends", "Suggests"))
+```
+
+How to [caret](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
+
+
+## Evaluation Metrics for Classificaiton
+
+ref: [machinelearning notes](https://www.machinelearningplus.com/machine-learning/evaluation-metrics-classification-models-r/)
+
+* Confusion Matrix
+* Sensitivity, Specificity and Detection Rate
+* Precision, Recall, and F1 score
+* Cohen's Kappa
+* KS Statistics and KS Chart
+* Kolmogorov-Smirnov chart
+* ROC Curve
+* Concordance and Discordance
+* Somers-D Statistic
+* Gini Coefficient
+
+
+
+
+
+
+
+
+
+
+# Specific Examples
+
+For demonstrations, we'd like to have a mix of problems, some with valued predictors, and some with discrete, and even a mix.
+
+Since we want these calculations to be something that can be traced through and still demonstrate the models we will focus on datasets with at no more 10 features, and 5000 observations.
+
+
+
+
+
+## Modeling Approach
+
+
+* data needs to be clean enough to have no zero elements
+
+* first use the generic train() method from caret package to plot the mose important variables (default uses random forest)
+
+* Random forest can tell us feature importance and when the accuracy drops off based off # of randomly selected predictors
+
+* break data into test/training set or cross-validation set and run confusion matrix against numerous methods
+
+
+
+### Data Analysis
+
+Before we can decide which sort of model to use, we need to understand a little more about the data.
+
+
+*distribution of outcome* in many cases we may be trying to detect an unlikely event, such as *note that many algortihms, do not work well with skewed data-sets;  one type of skewing that where the training data set
+
+Are the predictors discrete or real-valued?  If real-valued, is there a range or unlimited?  If discrete how many different levels/values are there?
+
+Are any predictors related to each other?
+
+
+What do the density functions of each predictor look like?  Anything skewed?
+
+
+
 The basic approach will be to ensure no zero elements
+```{r eval = FALSE}
 NAndx <- sapply(data, function(x) mean(is.na(x))) > .9
 nzv <- nearZeroVar(data)
+```
 
 
 
-## Parkinsons
+### Model Selection
 
-Let's take a closer look at the data
+based off the characterstics we will state which models we think will be best
 
+#### Model Evaluation
+
+
+then we evaluate the models side by side
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+## Specific Problems to Model
+
+
+
+```{r sampleFromWeb}
+trainData <- read.csv('https://raw.githubusercontent.com/selva86/datasets/master/breastcancer_training.csv')
+testData <- read.csv('https://raw.githubusercontent.com/selva86/datasets/master/breastcancer_test.csv')
+head(trainData)
+str(trainData)
+str(testData)
+
+logit.mod <- glm(Class ~ Cl.thickness + Cell.size + Cell.shape, family="binomial", data=trainData)
+
+pred <- predict(logit.mod, newdata=testData, type="response")
+y_pred <- ifelse(pred > 0.5, 1, 0)
+
+mean(y_pred == testData$Class)
+```
+
+
+
+### Parkinsons Data
+
+[parkinsons](https://archive.ics.uci.edu/ml/datasets/Parkinsons) binary classifier with 23 predictors; 197 observations
+
+#### Data Analysis
+
+
+These are created in Basic Data Analysis Markdown.
+```{r loadpddata}
+load("data/pdData.RData")
+head(pdData)
+str(pdData)
+summary(pdData)
+#table(as.factor(pdData$status))
+```
+Notice the status field on the summary output show 48 with status **0** - negative for PD and 147 with status **1** - has PD (total of **195** observations)
+
+
+Observation is **status** and has two values, making this a binomial classification problem.
+
+There are 22 predictors that are all continuous valued.
+
+
+pdFit is actually the linear model,  we use this model to look at important features in the data analysis
+
+Now let's pull out a training and test set and see what kind of predictions we can make with this
+
+```{r pkModel, warning=FALSE}
+set.seed(45278)
+inTrain <- createDataPartition(pdData$status, p=0.7, list=FALSE)
+training <- pdData[inTrain,]
+testing <- pdData[-inTrain,]
+table(training$status)
+
+
+
+
+control <- trainControl(method="cv", number=4, allowParallel=TRUE)
+
+
+#preproc <- preProcess(select(training,-(status)), method=c("center", "scale", "pca"), thresh = 0.8)
+preproc <- preProcess(select(training,-(status)), method="pca", thresh = 0.8)
+
+# TODO - I couldn't load these earlier or we failed
+library(mda) #mda
+library(MASS) #qda
+
+```
+
+
+#### Model Selection
+
+Experiment with different models
+
+**TODO:**
+
+* Linear not working
+* GBM not working
+* FDA not working
+* RDA not working
+
+
+
+
+
+##### Linear Regression
+
+This model is throwing an error about factors not allowed; thing I need to convert the data to 1-hot type of loading
+```{r lmpd, eval=FALSE}
+# error: factors are not allows Calls
+fit.lm <- lm(status ~ ., data=training)
+summary(fit.lm)
+predict.mda <- predict(fit.lm, newdata=testing)
+table(predict.lm, testing$status)
+```
+
+
+##### Logistic Regression
+
+```{r glmpd}
+set.seed(10)
+
+#fit.glm <- glm(status ~ ., data=training)
+#summary(fit.glm)
+#predict.glm <- predict(fit.glm, newdata=testing)
+#table(predict.glm, testing$status)
+
+tic("glm")
+fit.glm <- train(status ~ ., data=training, method="glm", preProcess="pca", trControl = control)
+t_out <- toc()
+#print(t_out) # use this later when summarizing reults
+predict.glm <- predict(fit.glm, newdata=testing)
+confMat.glm <- confusionMatrix(predict.glm, testing$status)
+confMat.glm
+
+
+tic("glm without pca preprocessing")
+fit.glm <- train(status ~ ., data=training, method="glm", trControl = control)
+t_out <- toc()
+#print(t_out) # use this later when summarizing reults
+predict.glm <- predict(fit.glm, newdata=testing)
+confMat.glm <- confusionMatrix(predict.glm, testing$status)
+confMat.glm
+
+
+```
+
+
+
+##### Regression with Regularization
+
+```{r glmnetpd, warning=FALSE}
+set.seed(10)
+suppressMessages(library(glmnet))
+
+
+
+
+fit.glmnet <- train(status ~ ., data=training, method="glmnet", preProcess="pca", trControl = control)
+
+predict.glmnet <- predict(fit.glmnet, newdata=testing)
+
+
+confMat.glmnet <- confusionMatrix(predict.glmnet, testing$status)
+names(confMat.glmnet)
+confMat.glmnet
+
+
+```
+
+
+
+
+##### Neural Network
+
+Neural Net does not seem to work at all; predicts that everything is true.
+
+```{r nnpd}
+library(nnet)
+tic("nnet")
+fit.nnet <- nnet(status ~ ., data=training, size=4, decay=0.0001, maxit=500, trace=FALSE)
+toc()
+#summary(fit.nnet)
+predict.nnet <- predict(fit.nnet, newdata=testing, type="class")
+table(predict.nnet, testing$status)
+
+#confMat.nnet <- confusionMatrix(predict.nnet, testing$status)
+#confMat.nnet
+```
+Looks like this is all showing positive (**1**) outcomes
+
+
+
+##### Support Vector Machine
+
+This is a good model to determine linear seperability
+
+classification for multiple class is supported by a one-vs-all method.
+```{r svmpd}
+suppressMessages(library(kernlab))
+tic("svm")
+fit.ksvm <- ksvm(status ~ ., data=training)
+toc()
+#summary(fit.ksvm)
+predict.ksvm <- predict(fit.ksvm, newdata=testing, type="response")
+#table(predict.ksvm, testing$status)
+confMat.ksvm <- confusionMatrix(predict.ksvm, testing$status)
+confMat.ksvm
+```
+
+
+
+
+
+
+##### Naive Bayes
+```{r nbpd}
+tic("nb")
+fit.nb <- naiveBayes(status ~ ., data=training)
+toc()
+#summary(fit.nb)
+predict.nb <- predict(fit.nb, newdata=testing)
+#table(predict.nb, testing$status)
+confMat.nb <- confusionMatrix(predict.nb, testing$status)
+confMat.nb
+```
+
+
+
+
+##### K-NN
+
+Let's move this to a new line to see what the deal is
+```{r knnpd}
+# error that object type 'closure' is not subsettable
+#fit.knn <- knn3(status ~ ., data=training, k=5)
+
+#set.seed(10)
+fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)
+
+
+#summary(knn)
+#predict.knn <- predict(fit.knn, newdata=testing, type="class")
+#table(predict.knn, testing$status)
+
+predict.knn <- predict(fit.knn, newdata=testing)
+confMat.knn <- confusionMatrix(predict.knn, testing$status)
+confMat.knn
+```
+
+
+
+
+
+##### Decision Tree
+```{r rpartpd}
+
+set.seed(10)
+tic("rpart")
+fit.rpart <- train(status ~ ., data=training, method="rpart", trControl=control)
+toc()
+#summary(fit.rpart)
+predict.rpart <- predict(fit.rpart, newdata=testing)
+#table(predict.rpart, testing$status)
+
+
+confMat.rpart <- confusionMatrix(predict.rpart, testing$status)
+#confMat.rpart$overall
+confMat.rpart
+
+
+```
+
+
+
+##### Random Forest
+
+Random Forest is the default method for the *caret* package **train** method.
+
+TODO add method *randomForest()* as well
+```{r rfpd}
+
+set.seed(10)
+tic("rf")
+fit.rf <- train(status ~ ., data=training, method="rf", trControl=control)
+toc()
+#summary(fit.rf)
+predict.rf <- predict(fit.rf, newdata=testing)
+#table(predict.rf, testing$status)
+
+confMat.rf <- confusionMatrix(predict.rf, testing$status)
+#confMat.rf$overall
+confMat.rf
+
+```
+
+
+this section was in a data exploration section, but is really using randomForest model
 ```{r plot}
 pdFit <- train(status ~ ., data=pdData)
 plot(varImp(pdFit, varImp.train=FALSE), top=10)
+#summary(pdFit)
 plot(pdFit)
 plot(pdFit$finalModel)
 pdFit$finalModel
 ```
 
-Now let's pull out a training and test set and see what kind of predictions we can make with this
 
-```{r pkModel, echo=FALSE}
-inTrain <- createDataPartition(pdData$status, p=0.8, list=FALSE)
-training <- pdData[inTrain,]
-testing <- pdData[-inTrain,]
-control <- trainControl(method="cv", number=4, allowParallel=TRUE)
 
-#preproc <- preProcess(select(training,-(status)), method=c("center", "scale", "pca"), thresh = 0.8)
-preproc <- preProcess(select(training,-(status)), method="pca", thresh = 0.8)
+##### Gradient Boosting
 
-# metric <- "Accuracy"
-```
-Experiment with different models
-
-```{r pkModel2}
-#formula.all <- as.forumula(paste("status ~ ", paste(features, collapse="+")))
-
-set.seed(10)
-fit.rf <- train(status ~ ., data=training, method="rf", trControl=control)
-
-set.seed(10)
-fit.knn <- train(status ~ ., data=training, method="knn", trControl = control)
-
-set.seed(10)
-fit.glm <- train(status ~ ., data=training, method="glm", preProcess="pca", trControl = control)
-
-results <- resamples(list(rf=fit.rf, knn=fit.knn, glm=fit.glm))
-summary(results)
-
+Eval is set to False
+```{r gbmpd, eval=FALSE}
+library(gbm)
+fit.gbm <- gbm(status ~ ., data=training)
+#summary(fit.gbm)
+predict.gbm <- predict(fit.gbm, newdata=testing)
+table(predict.gbm, testing$status)
+confMat.gbm <- confusionMatrix(predict.gbm, testing$status)
+confMat.gbm
 
 
 ```
 
-check some predictions
 
-```{r pkPredict}
-predict.rf <- predict(fit.rf, newdata=testing)
-confMat.rf <- confusionMatrix(predict.rf, testing$status)
 
-predict.knn <- predict(fit.knn, newdata=testing)
-confMat.knn <- confusionMatrix(predict.knn, testing$status)
 
-predict.glm <- predict(fit.glm, newdata=testing)
-confMat.glm <- confusionMatrix(predict.glm, testing$status)
+##### Mixture Discriminatnt Analysis
 
-confMat.rf$overall
-confMat.knn$overall
-confMat.glm$overall
-
-performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall, confMat.glm$overall), 3), ncol=3)
-colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors', 'GLM pca')
-print(as.table(performance))
+```{r mdapd}
+tic("mda")
+fit.mda <- mda(status ~ ., data=training)
+toc()
+#summary(fit.mda)
+predict.mda <- predict(fit.mda, newdata=testing)
+#table(predict.mda, testing$status)
+confMat.mda <- confusionMatrix(predict.mda, testing$status)
+confMat.mda
 ```
 
-Lastly try using caretEnsamble
-```{r caretEnsamble}
-xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
-                           gamma = 0, 
-                           colsample_bytree = 1.0, 
-                           subsample = 1.0, 
+
+##### Quadratic Discriminant Analysis
+maximize the distance between the classes
+
+```{r qdapd}
+tic("qda")
+fit.qda <- qda(status ~ ., data=training)
+toc()
+#summary(fit.qda)
+predict.qda <- predict(fit.qda, newdata=testing)$class
+confMat.qda <- confusionMatrix(predict.qda, testing$status)
+confMat.qda
+
+```
+
+
+##### Regularized Discriminant Analysis
+```{r rdapd}
+library(klaR)
+tic("rda")
+fit.rda <- rda(status ~ ., data=training, gamma=0.05, lambda=0.01)
+toc()
+#summary(fit.rda)
+predict.rda <- predict(fit.rda, newdata=testing)$class
+head(predict.rda)
+# getting error about all arguements must have same length on table
+#table(predict.rda, testing$status)
+confMat.rda <- confusionMatrix(predict.rda, testing$status)
+confMat.rda
+```
+
+
+
+##### Flexible Discriminant Analysis
+```{r fdapd, eval=FALSE}
+tic("fda")
+fit.fda <- fda(status ~ ., data=training)
+toc()
+# get error that 'x' must be actomic (changed to eval=FALSE)
+summary(fit.fda)
+predict.fda <- predict(fit.qda, newdata=testing)
+table(predict.fda, testing$status)
+confMat.fda <- confusionMatrix(predict.fda, testing$status)
+confMat.fda
+```
+
+
+##### other
+this was up in the top, but never used
+
+Check out this
+[Kaggle LGB](https://www.kaggle.com/pranav84/talkingdata-eda-to-model-evaluation-lb-0-9683)
+
+LightGBM offers good accuracy when using native categorical features instead of one-hot coding. As per the official documentation dated [22nd March 2018](https://media.readthedocs.org/pdf/lightgbm/latest/lightgbm.pdf), LightGBM can find the optimal split of categorical features. Such an optimal split can provide the much better accuracy than one-hot coding solution.
+
+```{r miscstuff, eval=FALSE}
+xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1,
+                           gamma = 0,
+                           colsample_bytree = 1.0,
+                           subsample = 1.0,
                            min_child_weight = 4)
 
 glmGrid <- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
@@ -139,7 +657,91 @@ glmGrid <- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
 #        glmnet = caretModelSpec(method="glm", tuneGrid=glmGrid)
 #    )
 #)
-#xyplot(resamples(modelList))
+```
+
+#### Model Evaluation
+This section should be a summary of the results above, there shouldn't be new calculations here
+
+
+```{r resultspd}
+
+results <- resamples(list(glm=fit.glm,
+                          knn=fit.knn,
+#                          glmnet=fit.glmnet,
+#                          nnet=fit.nnet,
+#                          svm=fit.ksvm,
+#                          nb=fit.nb,
+                          rpart=fit.rpart,
+                          rf=fit.rf))
+#                          mda=fit.mda,
+#                          qda=fit.qda,
+#                          rda=fit.rda))
+
+
+summary(results)
+
+accuracy <- data.frame(
+    glm=confMat.glm$overall[1],
+    knn=confMat.knn$overall[1],
+    glmnet=confMat.glmnet$overall[1],
+    #nnet=confMat.nnet$overall[1],
+    ksvm=confMat.ksvm$overall[1],
+    nb=confMat.nb$overall[1],
+    rf=confMat.rf$overall[1],
+    mda=confMat.mda$overall[1],
+    qda=confMat.qda$overall[1],
+    rda=confMat.rda$overall[1]
+)
+accuracy
+
+
 
 ```
-Fina
+
+
+Move these predictions up above
+```{r pkPredict}
+
+performance <- matrix(round(c(confMat.rf$overall, confMat.knn$overall, confMat.glm$overall), 3), ncol=3)
+colnames(performance) <- c('Random Forest', 'K-Nearest Neighbors', 'GLM pca')
+#rownames(performance) <- c('Accuracy', 'Kappa', 'AccuracyLower', 'AccuracyUpper', 'AccuracyNull', 'AccuracyPValue', 'McnemarPValue')
+rownames(performance) <- rownames(confMat.rf$overall)
+print(as.table(performance))
+```
+
+Lastly try using caretEnsamble
+
+
+
+
+
+
+
+### Buzz in Social Media
+
+[Buzz in Social Media](https://archive.ics.uci.edu/ml/datasets/Buzz+in+social+media+)
+
+### Sensorless Drive
+
+[Sensorless drive](https://archive.ics.uci.edu/ml/datasets/Dataset+for+Sensorless+Drive+Diagnosis) - 49 attributes, 11 classes, 58000 records
+
+### Card Payments (Binary Classifier)
+
+[card payment](https://archive.ics.uci.edu/ml/datasets/default+of+credit+card+clients) binary classifier with 23 predictors
+
+```{r loadccdata}
+load("data/ccData.RData")
+head(ccData)
+```
+
+
+
+
+
+
+
+## References
+
+
+* [UCI Datasets](https://archive.ics.uci.edu/ml/datasets.html?format=&task=cla&att=&area=&numAtt=10to100&numIns=&type=&sort=instDown&view=table)
+* [machinelearning notes](https://www.machinelearningplus.com/machine-learning/evaluation-metrics-classification-models-r/)

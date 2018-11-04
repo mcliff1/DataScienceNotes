@@ -3,3 +3,7 @@
 .RData
 .Ruserdata
 data
+debug.log
+rsconnect
+*.csv
+*.RData

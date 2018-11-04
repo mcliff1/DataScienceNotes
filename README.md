@@ -1,6 +1,9 @@
-# TODO - change this to a online source to keep track of papers and documents
+## Data Science Notes
+This is a collection of notes and reports to highlight some introductory data science concepts
 
-on Jan 28, I connected a RStudio project to this repository locally
+* BasicModelAnalysis
+* MyNeighborhood - notebook about using leaflet to visualize geographic data
+* BasicDataAnalysis - include notes on linear regression and residuals
 
 
 This repo has 2 branches, *master* where the main work is done and the *gh-pages* used so gitHub can host the content as I do for [linear regression](https://mcliff1.github.io/DataScienceNotes/BasicLinearRegression.html] whcih is also hosted n [RPubs](http://rpubs.com/mcliff/basic-linear-regression)

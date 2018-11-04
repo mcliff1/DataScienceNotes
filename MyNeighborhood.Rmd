@@ -1,0 +1,258 @@
+---
+title: "My Neighborhood"
+author: "Matt Cliff"
+date: "April 3, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, comment = NA)
+if (!require("pacman")) install.packages("pacman")
+pacman::p_load(dplyr, ggplot2, leaflet, tibble, tidyr, htmltools)
+```
+
+## Neighborhood Charts
+
+This notebook is in support of an application to be able to overlay certain geospatial data in and around my neighborhood in south Denver.
+
+Based on [Leaflet](https://rstudio.github.io/leaflet/)
+
+```{r intro}
+df <- data.frame(lng=c(-104.985), lat=c(39.765))
+
+m <- leaflet(df) %>% 
+    addTiles() %>%
+    addMarkers(lat=39.6445, lng=-104.9065, popup="Home")
+
+#%>%
+#    addProviderTiles(providers$Esri.WorldImagery)
+
+m
+```
+perfect, now we have a large list of providers we can choose from
+```{r providerList}
+names(providers)
+```
+
+
+Let's add some nearby trail access points
+```{r mkdataset}
+trail_str = 
+    "lat lng name trail
+39.6568 -104.9034 'goldsmith' green
+39.6426 -104.9408 'CO Highline' red
+39.6529 -104.9466 'Hampden Highline' red
+39.6596 -104.9403 'Eisenhower Pool' red
+39.6594 -104.9317 'Dahlia Highline' red
+39.6675 -104.9211 'Yale-1 Highline' red
+39.6675 -104.9115 'Yale-2 Highline' red
+39.6675 -104.9049 'Yale-3 Highline' red
+39.6683 -104.8921 'Yale-4 Highline' red
+39.6744 -104.9034 'Quebec Highline' red
+39.6641 -104.8845 'Yosemite Highline' red
+39.6386  -104.9361  'Highline Qunicy/Cherry Hills' red
+    39.6350  -104.9322  'Highline Dahlia/Cherry Hills' red
+     39.6599  -104.9035 'Highline/Goldsmith' green
+     39.6347  -104.8930 'I225/Goldsmith' green
+     39.6316  -104.8910 'Wallace Park' green
+     39.6426  -104.8956 'Rosamund' green
+     39.6239  -104.8890 'Belleview' green
+     39.6440  -104.8803 'Village Green Trail' blue
+      39.6615 -104.8778 'Hampden Heights' blue
+      39.6277 -104.8758 'Campus' blue
+      39.6601 -104.8649 'Cherry Creek-1' blue
+      39.6322 -104.8755 'Cherry Creek-2' blue"
+
+
+
+trails <- read.table(text=trail_str,
+                     header=TRUE,
+                     stringsAsFactors = FALSE) 
+trails
+
+m2 <- leaflet(trails) %>% 
+    addTiles() %>%
+    addAwesomeMarkers(~lng, ~lat, label=~name, popup=~name,  icon=awesomeIcons(icon="bicycle", library="fa", markerColor=~trail)) %>%
+    addProviderTiles(providers$Esri.WorldImagery)
+
+m2
+
+
+
+t_str = 
+    "lat lng name
+     39.6445  -104.9065  'Home'"
+
+
+
+homes <- read.table(text=t_str,
+                     header=TRUE,
+                     stringsAsFactors = FALSE)
+
+m3 <- m2 %>% 
+    addMarkers(lng = homes$lng, lat = homes$lat)
+
+m3
+```
+
+Ok that is looking good
+
+## Load Denver data
+
+3 data sets
+
+* [street lights](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-street-light-poles)
+* [311 calls](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-311-service-requests-2007-to-current)
+* [foodstore locations](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-food-stores)
+* **reference** [addresses lat/lng to denver address](https://www.denvergov.org/opendata/dataset/city-and-county-of-denver-addresses)
+
+
+### Street Lights
+
+```{r loadLightData, warning=FALSE}
+datafile <- "streetlight.csv"
+fileURL <- "https://www.denvergov.org/media/gis/DataCatalog/street_light_poles/csv/street_light_poles.csv"
+if(!file.exists(datafile)) {
+    download.file(fileURL, destfile=datafile)
+}
+streetlights <- read.csv(datafile)
+names(streetlights)
+
+#filter(lat < 39.763 & lat > 39.755) %>%
+#    filter(lng > -104.989 & lng < -104.981) %>%
+
+
+sldf <- subset(streetlights, 
+               select=c(ESRIGNSS_LATITUDE, ESRIGNSS_LONGITUDE, ROAD_TYPE, POLE_TYPE, POLE_HT, POWER_SRC, DIMMER, ESRIGNSS_ALTITUDE, OWNER, LOCATION, INSTALL_YEAR, POLE_COND, LUMIN_WATT)) %>%
+    rename(lat=ESRIGNSS_LATITUDE, lng=ESRIGNSS_LONGITUDE) %>%
+    filter(lat > 39.75 & lat < 39.77) %>%
+    filter(lng > -105.00 & lng < -104.96) %>%
+    extract(col="POLE_HT", into="ht", "([0-9]+)" ) %>%
+    extract(col="LUMIN_WATT", into="watts", "([0-9]+)" ) %>%
+    mutate(ht = as.numeric(ht)) %>%
+    mutate(watts = as.numeric(watts)) %>%
+    mutate(ps = ifelse(POWER_SRC == "Underground", "Underground", "Above Ground"))
+
+
+summary(sldf$ps)
+```
+
+
+The color represents if the powersource is underground or not, the size is propotional to the Lumin Wattage of the light.
+```{r cityLightOverview, warning=FALSE}
+
+pal <- colorFactor("Accent", domain=sldf$ps)
+
+label0 <- paste("Pole Type:", sldf$POLE_TYPE)
+label1 <- paste("Wattage:", sldf$watts)
+labels <- paste(label0,paste("\n", label1))
+
+leaflet(sldf) %>%
+    addTiles() %>%
+    addCircleMarkers(~lng, ~lat,
+               weight = 1,
+               radius= sldf$watts /20, 
+               fillOpacity=0.3, 
+               label = ~htmlEscape(labels),
+               color = ~pal(ps),
+               clusterOptions = markerClusterOptions()
+               ) %>%
+    addLegend("bottomright", pal = pal, values=sldf$ps, title="Power Supply") %>%
+    setView(lat=39.765, lng=-104.985, zoom = 15) %>%
+    addProviderTiles(providers$Esri.WorldImagery)
+
+```
+
+### Load the 311 data
+
+
+
+```{r load311Data, warning=FALSE}
+datafile <- "311service.csv"
+fileURL <- "https://www.denvergov.org/media/gis/DataCatalog/311_service_requests_2007_to_current/csv/311_service_requests_2007_to_current.csv"
+
+# 2016 only
+fileURL2 <- "https://www.denvergov.org/media/gis/DataCatalog/311_service_data/csv/311_service_data_2016.csv"
+
+
+if(!file.exists(datafile)) {
+    download.file(fileURL, destfile=datafile)
+}
+raw_infocalls <- read.csv(datafile)
+names(raw_infocalls)
+dim(raw_infocalls)
+
+infocalls <- raw_infocalls %>%
+   rename(lat=Latitude, lng=Longitude) %>%
+    filter(lat > 39.75 & lat < 39.77) %>%
+    filter(lng > -105.00 & lng < -104.96)
+
+
+```
+ok... now in business
+
+```{r three11Overview, warning=FALSE}
+leaflet(infocalls) %>%
+    addTiles() %>%
+    addCircleMarkers(~lng, ~lat,
+               weight = 1,
+               fillOpacity=0.3, 
+               clusterOptions = markerClusterOptions()
+               ) %>%
+    setView(lat=39.7, lng=-104.9, zoom = 10) %>%
+    addProviderTiles(providers$Esri.WorldImagery)
+
+```
+
+
+
+
+
+### grocery data
+
+
+```{r loadFoodData, warning=FALSE}
+datafile <- "food.csv"
+fileURL <- "https://www.denvergov.org/media/gis/DataCatalog/food_stores/csv/food_stores.csv"
+
+
+if(!file.exists(datafile)) {
+    download.file(fileURL, destfile=datafile)
+}
+raw_food <- read.csv(datafile)
+names(raw_food)
+summary(raw_food)
+
+food <- raw_food %>%
+   rename(lat=POINT_Y, lng=POINT_X, label=STORE_NAME)
+table(food$STORE_TYPE)
+```
+
+Basic Food plot
+```{r foodOverview, warning=FALSE}
+
+pal <- colorFactor("Accent", domain=food$STORE_TYPE)
+
+
+leaflet(food) %>%
+    addTiles() %>%
+    addCircleMarkers(~lng, ~lat, 
+               weight = 1,
+               fillOpacity = 0.3, 
+               color = ~pal(STORE_TYPE)
+               ) %>%
+        setView(lat=39.7, lng=-104.9, zoom = 10) %>%
+addProviderTiles(providers$Esri.WorldImagery)
+
+```
+
+## Write Output
+
+Write out the datasets for usage in the shiny app
+
+```{r saveDatasets}
+lights <- sldf
+save(trails, file="trails.RData")
+save(lights, file="lights.RData")
+save(infocalls, file="infocalls.RData")
+save(food, file="food.RData")

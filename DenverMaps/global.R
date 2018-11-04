@@ -1,0 +1,1 @@
+# global.R file for DenverMaps shiny app
