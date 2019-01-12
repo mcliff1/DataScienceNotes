@@ -13,11 +13,11 @@ data(galton)
 ```
 
 
-This survey paper provides references and insight into  [linear regression](https://en.wikipedia.org/wiki/Linear_regression). 
+This survey paper provides references and insight into  [linear regression](https://en.wikipedia.org/wiki/Linear_regression).
 
 ### What are we trying to Solve?
 
-We begin with covering the types of problems we can solve, we typically work with a set of data that can be real-valued (although this can be extended) as a set of predictors $\{ X_i \}$ that map to a set of observations $\{ y_i \}$. 
+We begin with covering the types of problems we can solve, we typically work with a set of data that can be real-valued (although this can be extended) as a set of predictors $\{ X_i \}$ that map to a set of observations $\{ y_i \}$.
 
 Some problems of interest are
 
@@ -38,20 +38,20 @@ freqData <- galton %>%
     summarize(freq = n())
 
 ggplot(freqData, aes(x = parent, y = child)) +
-    scale_size(guide = "none") + 
+    scale_size(guide = "none") +
     geom_point(col = "blue", aes(size=freq+20)) +
     stat_summary(fun.data = "mean_cl_boot") +
     geom_abline(intercept = 0, slope=1, col="black", alpha=0.5) +
     ggtitle("Galton dataset of parent height to child") +
     geom_smooth(method='lm', se=FALSE, col="red") +
-    labs(x = "Height of Parent (in)", 
+    labs(x = "Height of Parent (in)",
          y = "Height of Child (in)")
 
 
 ```
 
 
-The lighter line is the $y=x$ which represents the break-even for a child height, being the same height as the parent. The red line is the linear regression line, and the blue dots represent the data samples.  You can see the red line is more level than the diagonal, this is visualization shows that at the lower end, you are more likely to have a taller observation (shorter parents children are more likley to be taller than them).
+The lighter line is the $y=x$ which represents the child height ($y$) being the same height as the parent ($x$). The red line is the linear regression line, and the blue dots represent the data samples.  You can see the red line is more level than the diagonal, this is visualization shows that at the lower end, you are more likely to have a taller observation (shorter parents children are more likley to be taller than them).
 
 The Linear regression model is the one that assumes there is a linear relationship between the dependent variable (observation) $y_i$ and the regressor (predictor) $X_i$, that
 
@@ -71,10 +71,10 @@ freqData <- data.frame(p=predict(fit), r=resid(fit)) %>%
 
 ggplot(freqData, aes(x=p,y=r)) +
     geom_point(col="red", aes(size=freq+20)) +
-    scale_size(guide = "none") + 
+    scale_size(guide = "none") +
     geom_abline(intercept = 0, slope=0, col="black") +
     ggtitle("Galton dataset of parent height to child") +
-    labs(x = "Height of Parent (in)", 
+    labs(x = "Height of Parent (in)",
          y = "Residual Error (in)")
 
 
@@ -96,7 +96,7 @@ The goal is to minimize $\| \{ \varepsilon_i \} \|$, which involves identifying 
 In our example with Galton's heights we have, $M, N = 1$, and $n$ data points, using the Euclidean square-distance norm $\| x \|^2 = \sum_i x_i^2$.
 
 $$
-\| \{ \varepsilon_i \}^n_{i=1} \|^2 = \sum_{i=1}^n \varepsilon_i^2 
+\| \{ \varepsilon_i \}^n_{i=1} \|^2 = \sum_{i=1}^n \varepsilon_i^2
 = \sum_i^n \left( y_i - (\beta_0 + \beta_1 x_i )  \right)^2
 = S(\beta), \text{ where } \beta \in \mathbb{R}^2
 $$
@@ -122,25 +122,25 @@ The value $\beta_1$ is the slope of the linear regression model (or fit), this r
 Why is the square norm used?
 
 Fun Facts
- 
+
  * given a vector $X = \{ x_i \}$, the value $\alpha$ that will minimize $\| X - \alpha \|$ is the mean of $x_i$.
- 
+
  Given vector $X$, minimize $\| X - \alpha \|$.
- 
+
  Answer $E[X] = \frac{1}{n} \sum_{i=1}^n x_i$.
- 
- 
+
+
 * Given 2 sets of $N$ numbers $X$ and $Y$, find the $\alpha$ so we minimize $\| Y - \alpha X \|$.
 
 Answer $E[Y]/E[X] = \frac{\sum y_i}{\sum x_i}$
- 
- 
+
+
 * Ordinary Least Squares
 * Maximum likelihood estimation
 
 
 
-To the mathematician we would look at the $L^1$, or $L^2$ norm, to the lay-person these are called the 
+To the mathematician we would look at the $L^1$, or $L^2$ norm, to the lay-person these are called the
 
 Why do we use the square of delta's when estimating linear regression?
 
@@ -197,4 +197,3 @@ fit <- lm(V1 ~ . -1, data=dat)
 summary(fit)$coef
 plot(predict(fit), resid(fit), pch='.')
 ```
-
