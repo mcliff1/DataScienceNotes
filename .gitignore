@@ -7,3 +7,4 @@ debug.log
 rsconnect
 *.csv
 *.RData
+TextProcessing_files/*
