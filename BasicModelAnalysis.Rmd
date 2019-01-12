@@ -7,7 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-if (!require("pacman")) install.packages("pacman") 
+if (!require("pacman")) install.packages("pacman")
 pacman::p_load(caret, caretEnsemble, tictoc, e1071, mda, dplyr, ggplot2, glmnet)
 ```
 
@@ -16,8 +16,11 @@ The purpose of this paper is to provide a summary of classification methods in R
 Look forward to another composition for regression methods.
 
 
+(Neural Net Ref)[https://www.kaggle.com/jannesklaas/ai-bootcamp-5-multiclass-regression]
 
-## Classification Problem 
+In this case we will focus on the Parkison's dataset with 197 observations, and 23 predictors of a binary outcome.
+
+## Classification Problem
 
 The general **Classification** (value) problem is defined as one where the observation (or outcome) variable is a discrete value.  Some examples could be an outcome of *yes* or *no* or peforming character recognition on digits the outcome is one of 10 discrete values, *0* to *9*.  The predictors or indepdenent variables can be either discrete or real valued (or vector valued), we are only considering the cases wiht a finite number of predictors (for non-finite we are in the theory of *Functional Analysis*)
 
@@ -44,7 +47,7 @@ x2 <- runif(noise_points, min=-1.6, max=1.6)
 y2 <- x2 + rnorm(noise_points, mean=0, sd=0.3)
 c2 <- sample(c("A","B"), noise_points, replace=TRUE)
 
-#predict_df <- data.frame(pred=predict(lm(y~x, data=demo_df), demo_df), 
+#predict_df <- data.frame(pred=predict(lm(y~x, data=demo_df), demo_df),
 ggplot(data=data.frame(x=append(x,x2),y=append(y,y2),c=append(c,c2)), aes(x=x, y=y, col=c)) +
     geom_point(size=2) + geom_abline(slope = 1)
 
@@ -53,7 +56,7 @@ ggplot(data=data.frame(x=append(x,x2),y=append(y,y2),c=append(c,c2)), aes(x=x, y
 
 ```
 
-Solves to problem where all the spaces are fields ($\mathbb{R}$), which can lead to a large **sparse matrix**. 
+Solves to problem where all the spaces are fields ($\mathbb{R}$), which can lead to a large **sparse matrix**.
 
 This translates to a problem finding the best function $f:\mathbb{R}^N \to \mathbb{R}^M$ where *M* is the number of discrete outcomes, *N* is the sum of all discrete values across all variables.
 
@@ -63,7 +66,7 @@ in the standard sense, or could more generally be any combination that is linear
 
 
 
-### Generalized Linear Models 
+### Generalized Linear Models
 
 Logistic Regression using [glm](http://stat.ethz.ch/R-manual/R-devel/library/stats/html/glm.html)
 
@@ -96,7 +99,7 @@ Works on real numbers, must one-hot the space
 
 
 
-### Naive Bayes 
+### Naive Bayes
 Naive Bayes [naiveBayes](http://ugrad.stat.ubc.ca/R/library/e1071/html/naiveBayes.html) from [e1071](https://cran.r-project.org/web/packages/e1071/e1071.pdf)
 
 ### K-Nearest Neighbor
@@ -109,7 +112,7 @@ K-Nearest Neighbor [knn](http://stat.ethz.ch/R-manual/R-devel/library/class/html
 Decision Tree [rpart](https://cran.r-project.org/web/packages/rpart/rpart.pdf)
 
 
-### Ensembles of trees 
+### Ensembles of trees
 Ensembles of trees [randomForest](https://cran.r-project.org/web/packages/randomForest/randomForest.pdf)
 
 
@@ -121,7 +124,7 @@ Generalized Boosting [gbm](https://cran.r-project.org/web/packages/gbm/gbm.pdf)
 
 implements Fruend and Schapire's AdaBoost algoritm wand [Friedman's gradient boosting machine](https://github.com/gbm-developers/gbm)
 
-[GitHub](https://github.com/gbm-developers/gbm) 
+[GitHub](https://github.com/gbm-developers/gbm)
 
 
 ### Light Gradient Boosting Machine
@@ -137,7 +140,7 @@ Added to caret package in early 2017.
 [LGB Docs](https://lightgbm.readthedocs.io/en/latest/)
 
 
-Parameter tunning from Kaggle Ad Tracking (notes from LGB Docs) challenge - 
+Parameter tunning from Kaggle Ad Tracking (notes from LGB Docs) challenge -
 from _lgb.train_
 * nrounds
 * early_stopping_rounds
@@ -212,7 +215,7 @@ Since we want these calculations to be something that can be traced through and 
 * break data into test/training set or cross-validation set and run confusion matrix against numerous methods
 
 
- 
+
 ### Data Analysis
 
 Before we can decide which sort of model to use, we need to understand a little more about the data.
@@ -639,10 +642,10 @@ Check out this
 LightGBM offers good accuracy when using native categorical features instead of one-hot coding. As per the official documentation dated [22nd March 2018](https://media.readthedocs.org/pdf/lightgbm/latest/lightgbm.pdf), LightGBM can find the optimal split of categorical features. Such an optimal split can provide the much better accuracy than one-hot coding solution.
 
 ```{r miscstuff, eval=FALSE}
-xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1, 
-                           gamma = 0, 
-                           colsample_bytree = 1.0, 
-                           subsample = 1.0, 
+xgbTreeGrid <- expand.grid(nrounds=400, max_depth=3, eta=0.1,
+                           gamma = 0,
+                           colsample_bytree = 1.0,
+                           subsample = 1.0,
                            min_child_weight = 4)
 
 glmGrid <- expand.grid(.alpha = 1, .lambda=seq(0.001,0.1, by=0.001))
@@ -662,16 +665,16 @@ This section should be a summary of the results above, there shouldn't be new ca
 
 ```{r resultspd}
 
-results <- resamples(list(glm=fit.glm, 
-                          knn=fit.knn, 
-#                          glmnet=fit.glmnet, 
-#                          nnet=fit.nnet, 
+results <- resamples(list(glm=fit.glm,
+                          knn=fit.knn,
+#                          glmnet=fit.glmnet,
+#                          nnet=fit.nnet,
 #                          svm=fit.ksvm,
-#                          nb=fit.nb, 
-                          rpart=fit.rpart, 
+#                          nb=fit.nb,
+                          rpart=fit.rpart,
                           rf=fit.rf))
-#                          mda=fit.mda, 
-#                          qda=fit.qda, 
+#                          mda=fit.mda,
+#                          qda=fit.qda,
 #                          rda=fit.rda))
 
 
